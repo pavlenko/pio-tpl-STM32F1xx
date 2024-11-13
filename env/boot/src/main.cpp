@@ -46,8 +46,13 @@ static Console::Command_t test_cmd = {
     .args = test_args,
     .argc = sizeof(test_args) / sizeof(Console::Arg_t),
     .argv = test_argv};
+
 // v2
-using CMD = Command_<"test">;
+using CMD = Command_<
+    "test",
+    test_handler,
+    ArgList_<
+        Arg_<"value", ArgType_::INT>>>;
 // Console cmd def end
 
 int main(void)
