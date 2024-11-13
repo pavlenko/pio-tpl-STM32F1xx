@@ -1,0 +1,42 @@
+{
+    "todohighlight.isEnable": true,
+    "todohighlight.isCaseSensitive": false,
+    "todohighlight.keywords": [
+        {
+            "text": "TODO",
+            "color": "orange",
+            "overviewRulerColor": "orange",
+            "backgroundColor": "rgba(0,0,0,0)",
+            "isWholeLine": false
+        }
+    ],
+    "todohighlight.include": [
+        "**/*.c",
+        "**/*.cpp",
+        "**/*.h",
+        "**/*.hpp",
+        "**/*.js",
+        "**/*.jsx",
+        "**/*.ts",
+        "**/*.tsx",
+        "**/*.html",
+        "**/*.php",
+        "**/*.css",
+        "**/*.scss"
+    ],
+    "cmake.configureOnOpen": false,
+    "files.associations": {
+        "stm32f1xx.h": "c",
+        "stm32f103xb.h": "c",
+        "flash.h": "c",
+        "stm32f4xx_hal_conf_template.h": "c",
+        "stm32f107xc.h": "c",
+        "algorithm": "cpp"
+    },
+    "workbench.colorCustomizations": {
+        "editorUnnecessaryCode.opacity": "#000000C0"
+    },
+    "editor.showUnused": true,
+    "editor.showDeprecated": true,
+    "editor.showFoldingControls": "always"
+}
