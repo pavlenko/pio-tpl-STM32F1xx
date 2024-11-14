@@ -51,8 +51,7 @@ static Console::Command_t test_cmd = {
 using CMD = Command_<
     "test",
     test_handler,
-    ArgList_<
-        Arg_<"value", ArgType_::INT>>>;
+    Arg_<"value", ArgType_::INT>>;
 // Console cmd def end
 
 int main(void)
