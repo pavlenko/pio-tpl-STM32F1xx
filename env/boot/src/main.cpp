@@ -52,6 +52,12 @@ using CMD = Command_<
     "test",
     test_handler,
     Arg_<"value", ArgType_::INT>>;
+
+using CLIv2 = V2::Console<serial_write>;
+// V3
+// - Console<writeFn>(Command("1"), Command("2", Arg("a"), Arg("b")));
+//TODO split what possible to be at compile time templates, other constexpr
+
 // Console cmd def end
 
 int main(void)
@@ -88,6 +94,8 @@ int main(void)
     // Console config
     Console::Application::setWriteFn(serial_write);
     Console::Application::add(&test_cmd);
+
+    CLIv2::write("V2");//<-- V2 test write
     // Console config end
 
     while (true)

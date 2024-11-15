@@ -31,7 +31,8 @@
         "flash.h": "c",
         "stm32f4xx_hal_conf_template.h": "c",
         "stm32f107xc.h": "c",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "cstdint": "cpp"
     },
     "workbench.colorCustomizations": {
         "editorUnnecessaryCode.opacity": "#000000C0"

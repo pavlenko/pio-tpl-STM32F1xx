@@ -12,10 +12,8 @@ struct String
     {
         std::copy_n(str, N, data);
     }
-    //TODO operators
+    // TODO operators
 };
-
-typedef void (*write_fn)(const char *);
 
 typedef void (*Handler_)(void);
 
@@ -30,26 +28,38 @@ struct Arg_
 {
     static constexpr const char *name = tName.data;
     static constexpr const ArgType_ type = tType;
-    //TODO value here...
+    // TODO value here...
 };
 
-template <String tName, Handler_ tHandler, class ...tArgs>
+template <String tName, Handler_ tHandler, class... tArgs>
 struct Command_
 {
     static constexpr const char *name = tName.data;
     static constexpr const Handler_ handler = tHandler;
-    static constexpr const auto args = {tArgs()...};
     static constexpr const uint8_t argc = sizeof...(tArgs);
+
+    // static constexpr const auto args[argc] = {tArgs()...};
 };
 
-template <write_fn tWriter, typename... tCommands>
-class Console_
+namespace V2
 {
-    static constexpr const write_fn writeFn = tWriter;
+    // Command
+    //...
 
-    //TODO try functions
-    static Command_ &find(const char *name)
-    {}
-};
+    typedef void (*ConsoleWriter)(const char *);
+
+    //TODO pass commands somehow at compile time...
+    template <ConsoleWriter tWriter, typename... tCommands>
+    class Console
+    {
+        static constexpr const ConsoleWriter writer = tWriter;
+
+    public:
+        static inline void write(const char *str)
+        {
+            writer(str);
+        }
+    };
+}
 
 #endif // __CONSOLE_CLASS_H__
