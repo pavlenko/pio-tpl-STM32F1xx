@@ -3,7 +3,7 @@
 #include <stm32cpp/IO.hpp>
 #include <stm32cpp/UART.hpp>
 
-#include "console.hpp"
+// #include "console.hpp"
 
 using namespace STM32;
 
@@ -42,7 +42,7 @@ static void UART1_RxIdleHandler(size_t len)
     UART1_Driver::send((uint8_t *)uartDataBuf, len, UART1_TxDoneHandler);   // echo, but need hadle
     UART1_Driver::listen((uint8_t *)uartDataBuf, 256, UART1_RxIdleHandler); // need restart
 
-    Console::Application::process((char *)uartDataBuf, len);
+    // Console::Application::process((char *)uartDataBuf, len);
 }
 
 static void UART1_TxDoneHandler(void)

@@ -8,17 +8,18 @@ __attribute__((weak)) void _write_r(void) {}
 
 #include <string.h>
 
-#include <console.hpp>
-#include <console_class.hpp>
+// #include <console.hpp>
+// #include <console_v2.hpp>
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/Delay.hpp>
 #include <stm32cpp/Dispatcher.hpp>
 #include <stm32cpp/I2C.hpp>
 #include <stm32cpp/SPI.hpp>
 #include <stm32cpp/IO.hpp>
-#include <stm32cpp/UART.hpp>
+// #include <stm32cpp/UART.hpp>
 
 #include "uart.hpp"
+// #include "cli.hpp"
 
 // https://github.com/Nanaud7/shell-stm32/blob/main/stm32-bare-metal/shell.c
 
@@ -31,34 +32,10 @@ __attribute__((weak)) void _write_r(void) {}
 
 volatile uint32_t delay = 500;
 
-static inline void serial_write(const char *str)
-{
-    STM32::UART1_Driver::send((uint8_t *)str, strlen(str), nullptr);
-}
-
-// Console cmd def
-static void test_handler(void) {}
-static Console::Arg_t test_args[] = {{.name = "number", .type = Console::ArgumentType::INT}};
-static void *test_argv[sizeof(test_args) / sizeof(Console::Arg_t)];
-static Console::Command_t test_cmd = {
-    .name = "test",
-    .handler = test_handler,
-    .args = test_args,
-    .argc = sizeof(test_args) / sizeof(Console::Arg_t),
-    .argv = test_argv};
-
-// v2
-using CMD = Command_<
-    "test",
-    test_handler,
-    Arg_<"value", ArgType_::INT>>;
-
-using CLIv2 = V2::Console<serial_write>;
-// V3
-// - Console<writeFn>(Command("1"), Command("2", Arg("a"), Arg("b")));
-//TODO split what possible to be at compile time templates, other constexpr
-
-// Console cmd def end
+// static inline void serial_write(const char *str)
+// {
+//     STM32::UART1_Driver::send((uint8_t *)str, strlen(str), nullptr);
+// }
 
 int main(void)
 {
@@ -90,21 +67,17 @@ int main(void)
     // Led config end
 
     UART1_Init();
-
-    // Console config
-    Console::Application::setWriteFn(serial_write);
-    Console::Application::add(&test_cmd);
-
-    CLIv2::write("V2");//<-- V2 test write
-    // Console config end
+    // CLI_Init();
 
     while (true)
     {
-        Dispatcher::dispatch();
+        // Dispatcher::dispatch();
+
+        // Console::process(nullptr, 0);
 
         IO::PC13::tog();
         Delay::ms(delay);
-        serial_write("OK\n");
+        // Console::write("OK\n");
         Delay::ms(delay);
     }
     return 0;
