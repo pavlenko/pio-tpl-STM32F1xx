@@ -19,7 +19,7 @@ __attribute__((weak)) void _write_r(void) {}
 // #include <stm32cpp/UART.hpp>
 
 #include "uart.hpp"
-// #include "cli.hpp"
+#include "cli.hpp"
 
 // https://github.com/Nanaud7/shell-stm32/blob/main/stm32-bare-metal/shell.c
 
@@ -67,7 +67,7 @@ int main(void)
     // Led config end
 
     UART1_Init();
-    // CLI_Init();
+    CLI_Init();
 
     while (true)
     {
@@ -77,7 +77,7 @@ int main(void)
 
         IO::PC13::tog();
         Delay::ms(delay);
-        // Console::write("OK\n");
+        CLI::write("OK\n");
         Delay::ms(delay);
     }
     return 0;
