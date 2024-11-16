@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <stdlib.h>
 
 // struct for allow pass string as template parameter & use at compile time
 // template <std::size_t N>
@@ -45,6 +46,19 @@
 
 namespace V2
 {
+    enum class ArgType
+    {
+        INT,
+        STR,
+    };
+
+    union ArgValue
+    {
+        intptr_t int_value;
+        const char *str_value;
+        void *any_value;
+    };
+
     // Command
     struct Command
     {
@@ -53,11 +67,26 @@ namespace V2
 
     typedef void (*ConsoleWriter)(const char *);
 
-    template <ConsoleWriter tWriter, class ... tCommands>
+    template <ConsoleWriter tWriter, class... tCommands>
     class Console
     {
         static constexpr const ConsoleWriter writer = tWriter;
-        static constexpr const std::array<Command, sizeof...(tCommands)> commands{tCommands()...};//<--???
+        static constexpr const std::array<Command, sizeof...(tCommands)> commands{tCommands()...}; //<--???
+
+        static inline bool parseArg(const char *buf, ArgType type, ArgValue *val)
+        {
+            switch (type)
+            {
+            case ArgType::INT:
+                int32_t result = atol(buf);
+                val->int_value = result;
+                return true;
+            case ArgType::STR:
+                val->str_value = buf;
+                return true;
+            }
+            return false;
+        }
 
     public:
         static inline void process(char *buf, size_t len)
