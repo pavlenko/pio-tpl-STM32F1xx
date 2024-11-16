@@ -33,7 +33,9 @@
         "stm32f107xc.h": "c",
         "algorithm": "cpp",
         "cstdint": "cpp",
-        "array": "cpp"
+        "array": "cpp",
+        "cstdlib": "cpp",
+        "cerrno": "cpp"
     },
     "workbench.colorCustomizations": {
         "editorUnnecessaryCode.opacity": "#000000C0"
