@@ -36,16 +36,6 @@
 //     // TODO value here...
 // };
 
-// template <String tName, Handler_ tHandler, class... tArgs>
-// struct Command_
-// {
-//     static constexpr const char *name = tName.data;
-//     static constexpr const Handler_ handler = tHandler;
-//     static constexpr const uint8_t argc = sizeof...(tArgs);
-
-//     // static constexpr const auto args[argc] = {tArgs()...};
-// };
-
 namespace V2
 {
     enum class ArgType
@@ -71,19 +61,20 @@ namespace V2
 
     typedef void (*ConsoleWriter)(const char *);
 
-    template <ConsoleWriter tWriter, class... tCommands>
+    template <ConsoleWriter tWriter>
     class Console
     {
         static constexpr const ConsoleWriter writer = tWriter;
-        static constexpr const std::array<Command*, sizeof...(tCommands)> commands{tCommands()...}; //<--???
-        //TODO need init somehow in other way
+
+        static inline Command *_commands_arr;
+        static inline uint8_t _commands_num;
 
         static inline Command *find(const char *str)
         {
-            for (Command *cmd : commands)
+            for (size_t i; i < _commands_num; i++)
             {
-                if (0 == strcmp(cmd->name, str))
-                    return cmd;
+                if (0 == strcmp(_commands_arr[i].name, str))
+                    return &_commands_arr[i];
             }
             return nullptr;
         }
@@ -106,10 +97,10 @@ namespace V2
         }
 
     public:
-        static inline void configure(const Command commands[])
+        static inline void configure(Command *arr, size_t num)
         {
-            //static Command *commands
-            //static size_t commands_len
+            _commands_arr = arr;
+            _commands_num = num;
         }
 
         static inline void process(char *buf, size_t len)
@@ -126,19 +117,20 @@ namespace V2
                         return; // Empty line or extra whitespace - just skip handle
 
                     buf[i] = '\0'; // Replace char to end terminator for proper parse arg
-                }
-                if (!cmd)
-                {
-                    cmd = find(token);
                     if (!cmd)
                     {
-                        write("ERR: command not found");
-                        return;
+                        cmd = find(token);
+                        if (!cmd)
+                        {
+                            write("ERR: command not found");
+                            return;
+                        }
+                        //TODO args
                     }
-                }
-                else if (!token)
-                {
-                    token = &buf[i]; // Set token addr if not set
+                    else if (!token)
+                    {
+                        token = &buf[i]; // Set token addr if not set
+                    }
                 }
             }
         }
