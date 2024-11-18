@@ -19,13 +19,66 @@ namespace STM32
     {
         namespace BKPAccess
         {
-            static inline void enable() { PWR->CR |= PWR_CR_DBP; }
-            static inline void disable() { PWR->CR &= ~PWR_CR_DBP; }
+            static inline void enable()
+            {
+                __HAL_RCC_PWR_CLK_ENABLE();
+                PWR->CR |= PWR_CR_DBP;
+            }
+            static inline void disable()
+            {
+                PWR->CR &= ~PWR_CR_DBP;
+            }
         }
 
-        class PVD
+        // F1,F4: 2.2...2.9
+        // F2: 2.0...2.9
+        // L0: 1.9...3.1
+        enum class PVDLevel
         {
-            // TODO enable/disable/config/irq
+            _0, // maybe alias
+            _1,
+            _2,
+            _3,
+            _4,
+            _5,
+            _6,
+            _7,
+        };
+
+        enum class PVDMode
+        {
+            NORMAL,
+            // External IRQ
+            EXTI_RISING, // TODO values??? maybe better split to irq/event & exti edge
+            EXTI_FALLING,
+            EXTI_BOTH,
+            // Event
+            EVENT_RISING,
+            EVENT_FALLING,
+            EVENT_BOTH,
+        };
+
+        inline PVDMode operator|(PVDMode lft, PVDMode rgt)
+        {
+            return PVDMode(static_cast<uint32_t>(lft) | static_cast<uint32_t>(rgt));
+        }
+
+        namespace PVD
+        {
+            static inline void configure()
+            {
+                // level affects PWR regs
+                // mode affects EXTI regs
+            }
+            static inline void enable()
+            {
+            }
+            static inline void disable()
+            {
+            }
+            static inline void dispatchIRQ()
+            {
+            }
         };
 
         enum class LPEntry
@@ -55,7 +108,7 @@ namespace STM32
             }
 
             template <LPEntry tEntry>
-            static inline void enterSTOP(bool lpEnabled = false)//TODO pass enum
+            static inline void enterSTOP(bool lpEnabled = false) // TODO pass enum
             {
                 PWR->CR &= ~PWR_CR_PDDS;
                 MODIFY_REG(PWR->CR, PWR_CR_LPDS, lpEnabled << PWR_CR_LPDS_Pos);
