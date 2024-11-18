@@ -1,5 +1,5 @@
-#ifndef __STM32_PWR_HPP__
-#define __STM32_PWR_HPP__
+#ifndef __STM32_POWER_HPP__
+#define __STM32_POWER_HPP__
 
 #include <cstdint>
 
@@ -56,10 +56,13 @@ namespace STM32
 
         typedef void (*PVDCallback)();
 
-        namespace PVD
+        class PVD
         {
+            static inline PVDCallback callback;
+
+        public:
             template <PVDLevel tLevel, PVDMode tMode, EXTIEdge tEdge>
-            static inline void configure()
+            static inline void configure(PVDCallback cb = nullptr)
             {
                 MODIFY_REG(PWR->CR, PWR_CR_PLS, static_cast<uint32_t>(tLevel) << PWR_CR_PLS_Pos);
 
@@ -84,6 +87,7 @@ namespace STM32
                 {
                     EXTI->FTSR |= PWR_EXTI_LINE_PVD;
                 }
+                callback = cb;
             }
             static inline void enable()
             {
@@ -98,12 +102,23 @@ namespace STM32
                 if (EXTI->PR & PWR_EXTI_LINE_PVD)
                 {
                     EXTI->PR |= PWR_EXTI_LINE_PVD;
-                    //TODO callback
+                    if (callback)
+                        callback();
                 }
             }
         };
 
-        //TODO wakeup
+        namespace WakeupPin
+        {
+            static inline void enable()
+            {
+                PWR->CSR |= PWR_CSR_EWUP;
+            }
+            static inline void disable()
+            {
+                PWR->CSR &= ~PWR_CSR_EWUP;
+            }
+        };
 
         enum class LPEntry
         {
@@ -132,7 +147,7 @@ namespace STM32
             }
 
             template <LPEntry tEntry>
-            static inline void enterSTOP(bool lpEnabled = false) // TODO pass enum
+            static inline void enterSTOP(bool lpEnabled = false)
             {
                 PWR->CR &= ~PWR_CR_PDDS;
                 MODIFY_REG(PWR->CR, PWR_CR_LPDS, lpEnabled << PWR_CR_LPDS_Pos);
@@ -162,4 +177,4 @@ namespace STM32
     }
 }
 
-#endif // __STM32_PWR_HPP__
+#endif // __STM32_POWER_HPP__

@@ -8,15 +8,12 @@ __attribute__((weak)) void _write_r(void) {}
 
 #include <string.h>
 
-// #include <console.hpp>
-// #include <console_v2.hpp>
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/Delay.hpp>
 #include <stm32cpp/Dispatcher.hpp>
 #include <stm32cpp/I2C.hpp>
 #include <stm32cpp/SPI.hpp>
 #include <stm32cpp/IO.hpp>
-// #include <stm32cpp/UART.hpp>
 
 #include "uart.hpp"
 #include "cli.hpp"
@@ -54,8 +51,6 @@ int main(void)
         RCC_CFGR_PPRE2_DIV1,
         FLASH_LATENCY_2>;
     Clock::SYSClock::configure<SYSClockConfig>();
-
-    __HAL_RCC_PWR_CLK_ENABLE();//<-- Common for F1 & F4, need for access backup domain
     // Clock config end
 
     Delay::init();
