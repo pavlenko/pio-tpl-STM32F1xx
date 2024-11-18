@@ -55,8 +55,7 @@ int main(void)
         FLASH_LATENCY_2>;
     Clock::SYSClock::configure<SYSClockConfig>();
 
-    __HAL_RCC_AFIO_CLK_ENABLE();
-    __HAL_RCC_PWR_CLK_ENABLE();
+    __HAL_RCC_PWR_CLK_ENABLE();//<-- Common for F1 & F4, need for access backup domain
     // Clock config end
 
     Delay::init();
