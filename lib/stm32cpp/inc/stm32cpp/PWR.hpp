@@ -3,6 +3,8 @@
 
 #include <cstdint>
 
+#include <stm32cpp/EXTI.hpp>
+
 extern "C"
 {
 #include "stm32f1xx_hal_pwr.h"
@@ -47,15 +49,9 @@ namespace STM32
 
         enum class PVDMode
         {
-            NORMAL,
-            // External IRQ
-            EXTI_RISING, // TODO values??? maybe better split to irq/event & exti edge
-            EXTI_FALLING,
-            EXTI_BOTH,
-            // Event
-            EVENT_RISING,
-            EVENT_FALLING,
-            EVENT_BOTH,
+            IRQ = 0x1,
+            EVENT,
+            BOTH,
         };
 
         inline PVDMode operator|(PVDMode lft, PVDMode rgt)
@@ -63,21 +59,57 @@ namespace STM32
             return PVDMode(static_cast<uint32_t>(lft) | static_cast<uint32_t>(rgt));
         }
 
+        inline PVDMode operator&(PVDMode lft, PVDMode rgt)
+        {
+            return PVDMode(static_cast<uint32_t>(lft) & static_cast<uint32_t>(rgt));
+        }
+
+        typedef void (*PVDCallback)();
+
         namespace PVD
         {
+            template <PVDLevel tLevel, PVDMode tMode, EXTIEdge tEdge>
             static inline void configure()
             {
-                // level affects PWR regs
-                // mode affects EXTI regs
+                MODIFY_REG(PWR->CR, PWR_CR_PLS, static_cast<uint32_t>(tLevel) << PWR_CR_PLS_Pos);
+
+                EXTI->IMR &= ~PWR_EXTI_LINE_PVD;
+                EXTI->EMR &= ~PWR_EXTI_LINE_PVD;
+                EXTI->RTSR &= ~PWR_EXTI_LINE_PVD;
+                EXTI->FTSR &= ~PWR_EXTI_LINE_PVD;
+
+                if constexpr (tMode == PVDMode::IRQ || tMode == PVDMode::BOTH)
+                {
+                    EXTI->IMR |= PWR_EXTI_LINE_PVD;
+                }
+                if constexpr (tMode == PVDMode::EVENT || tMode == PVDMode::BOTH)
+                {
+                    EXTI->EMR |= PWR_EXTI_LINE_PVD;
+                }
+                if constexpr (tEdge == EXTIEdge::RISING || tEdge == EXTIEdge::BOTH)
+                {
+                    EXTI->RTSR |= PWR_EXTI_LINE_PVD;
+                }
+                if constexpr (tEdge == EXTIEdge::FALLING || tEdge == EXTIEdge::BOTH)
+                {
+                    EXTI->FTSR |= PWR_EXTI_LINE_PVD;
+                }
             }
             static inline void enable()
             {
+                PWR->CR |= PWR_CR_PVDE;
             }
             static inline void disable()
             {
+                PWR->CR &= ~PWR_CR_PVDE;
             }
             static inline void dispatchIRQ()
             {
+                if (EXTI->PR & PWR_EXTI_LINE_PVD)
+                {
+                    EXTI->PR |= PWR_EXTI_LINE_PVD;
+                    //TODO callback
+                }
             }
         };
 
