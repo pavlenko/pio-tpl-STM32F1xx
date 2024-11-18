@@ -49,20 +49,10 @@ namespace STM32
 
         enum class PVDMode
         {
-            IRQ = 0x1,
+            IRQ,
             EVENT,
             BOTH,
         };
-
-        inline PVDMode operator|(PVDMode lft, PVDMode rgt)
-        {
-            return PVDMode(static_cast<uint32_t>(lft) | static_cast<uint32_t>(rgt));
-        }
-
-        inline PVDMode operator&(PVDMode lft, PVDMode rgt)
-        {
-            return PVDMode(static_cast<uint32_t>(lft) & static_cast<uint32_t>(rgt));
-        }
 
         typedef void (*PVDCallback)();
 
@@ -112,6 +102,8 @@ namespace STM32
                 }
             }
         };
+
+        //TODO wakeup
 
         enum class LPEntry
         {
