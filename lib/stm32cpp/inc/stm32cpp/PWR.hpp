@@ -25,7 +25,11 @@ namespace STM32
             STANDBY,
         };
 
-        enum class LPEntry{WFI,WFE};
+        enum class LPEntry
+        {
+            WFI,
+            WFE
+        };
 
         // see https://controllerstech.com/low-power-modes-in-stm32/
         class LPMode
@@ -36,21 +40,66 @@ namespace STM32
             // on exit stop mode we also need configure clock again
             static inline void enter(LPType mode, LPEntry req)
             {
-                //sleep:
+                // sleep:
                 //- clear SLEEPDEEP
                 //- call __WFI() or call __SEV();__WFE();__WFE();
-                //stop:
+                // stop:
                 //- clear PDDS
                 //- set LPDS value
                 //- set SLEEPDEEP
                 //- call __WFI() or call __SEV();__WFE();__WFE();
                 //- clear SLEEPDEEP
-                //standby:
+                // standby:
                 //--disable wakeup flags
                 //--enable wakeup pin or RTC periodic wakeup
                 //- set PDDS
                 //- set SLEEPDEEP
                 //- call __WFI()
+            }
+
+            template <LPEntry tEntry>
+            static inline void sleep()
+            {
+                SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+
+                if constexpr (tEntry == LPEntry::WFI) // Request wait for interrupt
+                {
+                    __WFI();
+                }
+                else // Request wait for event sequence
+                {
+                    __SEV();
+                    __WFE();
+                    __WFE();
+                }
+            }
+
+            template <LPEntry tEntry>
+            static inline void stop(bool lpEnabled = false)
+            {
+                PWR->CR &= ~PWR_CR_PDDS;
+                MODIFY_REG(PWR->CR, PWR_CR_LPDS, lpEnabled);
+                SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+
+                if constexpr (tEntry == LPEntry::WFI) // Request wait for interrupt
+                {
+                    __WFI();
+                }
+                else // Request wait for event sequence
+                {
+                    __SEV();
+                    __WFE();
+                    __WFE();
+                }
+
+                SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
+            }
+
+            static inline void standby(void)
+            {
+                PWR->CR |= PWR_CR_PDDS;
+                SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+                __WFI(); // Request wait for interrupt
             }
         };
     }
