@@ -8,21 +8,24 @@ extern "C"
 #include "stm32f1xx_hal_pwr.h"
 }
 
+/**
+ * @brief Power control
+ *
+ * see https://controllerstech.com/low-power-modes-in-stm32/
+ */
 namespace STM32
 {
     namespace Power
     {
+        namespace BKPAccess
+        {
+            static inline void enable() { PWR->CR |= PWR_CR_DBP; }
+            static inline void disable() { PWR->CR &= ~PWR_CR_DBP; }
+        }
+
         class PVD
         {
-            // enable/disable/config/irq
-        };
-        // backup: enable/disable access
-
-        enum class LPType
-        {
-            SLEEP,
-            STOP,
-            STANDBY,
+            // TODO enable/disable/config/irq
         };
 
         enum class LPEntry
@@ -31,34 +34,11 @@ namespace STM32
             WFE
         };
 
-        // see https://controllerstech.com/low-power-modes-in-stm32/
         class LPMode
         {
         public:
-            // overall need to disable systick irq otherwise it will leave lp mode
-            // also need enable it back on exit sleep mode, if use sleeponexit here need to disable it
-            // on exit stop mode we also need configure clock again
-            static inline void enter(LPType mode, LPEntry req)
-            {
-                // sleep:
-                //- clear SLEEPDEEP
-                //- call __WFI() or call __SEV();__WFE();__WFE();
-                // stop:
-                //- clear PDDS
-                //- set LPDS value
-                //- set SLEEPDEEP
-                //- call __WFI() or call __SEV();__WFE();__WFE();
-                //- clear SLEEPDEEP
-                // standby:
-                //--disable wakeup flags
-                //--enable wakeup pin or RTC periodic wakeup
-                //- set PDDS
-                //- set SLEEPDEEP
-                //- call __WFI()
-            }
-
             template <LPEntry tEntry>
-            static inline void sleep()
+            static inline void enterSLEEP()
             {
                 SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
 
@@ -75,10 +55,10 @@ namespace STM32
             }
 
             template <LPEntry tEntry>
-            static inline void stop(bool lpEnabled = false)
+            static inline void enterSTOP(bool lpEnabled = false)//TODO pass enum
             {
                 PWR->CR &= ~PWR_CR_PDDS;
-                MODIFY_REG(PWR->CR, PWR_CR_LPDS, lpEnabled);
+                MODIFY_REG(PWR->CR, PWR_CR_LPDS, lpEnabled << PWR_CR_LPDS_Pos);
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
 
                 if constexpr (tEntry == LPEntry::WFI) // Request wait for interrupt
@@ -95,7 +75,7 @@ namespace STM32
                 SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
             }
 
-            static inline void standby(void)
+            static inline void enterSTANDBY(void)
             {
                 PWR->CR |= PWR_CR_PDDS;
                 SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
