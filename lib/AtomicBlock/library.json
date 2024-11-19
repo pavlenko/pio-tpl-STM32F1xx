@@ -1,9 +1,9 @@
 {
     "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
-    "name": "dispatcher",
+    "name": "AtomicBlock",
     "build": {
-        "includeDir": ".",
-        "srcDir": "."
+        "includeDir": "",
+        "srcDir": ""
     },
     "version": "0.0.1"
 }

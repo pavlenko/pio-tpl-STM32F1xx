@@ -1,26 +1,14 @@
 #ifndef __DISPATCHER_HPP__
 #define __DISPATCHER_HPP__
 
-#include <cstdint>
+#include <stdint.h>
 
-#include "cmsis_compiler.h"
+#include <AtomicBlock.hpp>
 
-// TODO namespace,dispatcher,task,cb,wrappers,atomics
+// TODO namespace,dispatcher,task,cb,wrappers
 #ifndef DISPATCHER_MAX_TASKS
 #define DISPATCHER_MAX_TASKS 10
 #endif
-
-//TODO extract to separate lib, also make configurable via templates
-class Atomic
-{
-private:
-    uint32_t _sreg;
-
-public:
-    Atomic() : _sreg(__get_PRIMASK()) { __disable_irq(); }
-    ~Atomic() { __set_PRIMASK(_sreg); }
-    operator bool() { return false; }
-};
 
 typedef void (*TaskHandler)(void);
 
@@ -58,7 +46,7 @@ public:
         }
 
         Task task(handler);
-        Atomic atomic;
+        AtomicBlock atomic;
 
         _tasks[_tasksTail] = task;
         _tasksTail++;
@@ -77,7 +65,7 @@ public:
         {
             Task &task = _tasks[_tasksHead];
             {
-                Atomic atomic;
+                AtomicBlock atomic;
                 _tasksHead++;
 
                 if (_tasksHead >= DISPATCHER_MAX_TASKS)
