@@ -64,7 +64,7 @@ namespace STM32
         enum class Oversampling
         {
             _16BIT = 0x00000000u,
-#if defined (USART_CR1_OVER8)
+#if defined(USART_CR1_OVER8)
             _8BIT = USART_CR1_OVER8,
 #endif
         };
@@ -77,8 +77,7 @@ namespace STM32
             StopBits tStopBits,
             Parity tParity,
             HWControl tHWControl = HWControl::NONE,
-            Oversampling tOversampling = Oversampling::_16BIT
-        >
+            Oversampling tOversampling = Oversampling::_16BIT>
         struct Config
         {
             static constexpr auto mode = tMode;
@@ -90,33 +89,31 @@ namespace STM32
             static constexpr auto oversampling = tOversampling;
         };
 
-        typedef void(*ErrorHandlerT)(void);
-        typedef void(*TXDoneHandlerT)(void);
-        typedef void(*RXDoneHandlerT)(void);
-        typedef void(*RXIdleHandlerT)(size_t);
+        namespace
+        {
+            typedef void (*ErrorHandler)();
+            typedef void (*Callback)();
 
-        //TODO split to separate tx/rx
-        struct Data {
-            uint8_t* txBuf;
-            size_t txLen;
-            uint8_t* rxBuf;
-            size_t rxLen;
-            size_t rxCnt;
-            TXDoneHandlerT txDoneHandler;
-            RXDoneHandlerT rxDoneHandler;
-            RXIdleHandlerT rxIdleHandler;
-        };
+            struct _Data
+            {
+                uint8_t *buf;
+                size_t len;
+                size_t cnt;
+                Callback callback;
+            };
+        }
 
         template <uint32_t TRegsAddress, IRQn_Type TEventIRQn, class TClock, class TReset>
         class Driver
         {
         private:
-            static inline Data _data;
-            static inline ErrorHandlerT _errorHandler;
+            static inline _Data _txData;
+            static inline _Data _rxData;
+            static inline ErrorHandler _errorHandler;
 
-            static constexpr USART_TypeDef* _regs()
+            static constexpr USART_TypeDef *_regs()
             {
-                return reinterpret_cast<USART_TypeDef*>(TRegsAddress);
+                return reinterpret_cast<USART_TypeDef *>(TRegsAddress);
             }
 
         public:
@@ -145,31 +142,33 @@ namespace STM32
                 MODIFY_REG(
                     _regs()->CR1,
                     (USART_CR1_M | USART_CR1_PCE | USART_CR1_PS | USART_CR1_TE | USART_CR1_RE | USART_CR1_OVER8),
-                    (dataBits | parity | mode | oversampling)
-                );
+                    (dataBits | parity | mode | oversampling));
 #else
                 MODIFY_REG(
                     _regs()->CR1,
                     (USART_CR1_M | USART_CR1_PCE | USART_CR1_PS | USART_CR1_TE | USART_CR1_RE),
-                    (dataBits | parity | mode)
-                );
+                    (dataBits | parity | mode));
 #endif /* USART_CR1_OVER8 */
 
                 MODIFY_REG(_regs()->CR3, (USART_CR3_RTSE | USART_CR3_CTSE), hwControl);
 
                 uint32_t pclk;
-                if constexpr (TRegsAddress == USART1_BASE) {
+                if constexpr (TRegsAddress == USART1_BASE)
+                {
                     pclk = HAL_RCC_GetPCLK2Freq();
                 }
-                else {
+                else
+                {
                     pclk = HAL_RCC_GetPCLK1Freq();
                 }
 
 #if defined(USART_CR1_OVER8)
-                if constexpr (C::oversampling == Oversampling::_8BIT) {
+                if constexpr (C::oversampling == Oversampling::_8BIT)
+                {
                     _regs()->BRR = UART_BRR_SAMPLING8(pclk, baudRate);
                 }
-                else {
+                else
+                {
                     _regs()->BRR = UART_BRR_SAMPLING16(pclk, baudRate);
                 }
 #else
@@ -190,52 +189,36 @@ namespace STM32
                 NVIC_DisableIRQ(TEventIRQn);
             }
 
-            static inline void setErrorHandler(void (*handler)(void))
+            static inline void setErrorHandler(ErrorHandler handler)
             {
                 _errorHandler = handler;
             }
 
             static inline size_t getRXLen()
             {
-                return _data.rxLen;
+                return _rxData.len;
             }
 
-            static inline void listen(uint8_t* buf, size_t len, RXIdleHandlerT cb)
+            static inline void listen(uint8_t *buf, size_t len, Callback cb)
             {
-                Atomic::CompareExchange(&_data.rxBuf, (uint8_t*)nullptr, buf);
+                Atomic::CompareExchange(&_rxData.buf, (uint8_t *)nullptr, buf);
 
-                _data.rxLen = len;
-                _data.rxCnt = 0;
-
-                _data.rxIdleHandler = cb;
+                _rxData.len = len;
+                _rxData.cnt = 0;
+                _rxData.callback = cb;
 
                 _regs()->CR1 |= USART_CR1_PEIE | USART_CR1_RXNEIE | USART_CR1_IDLEIE;
                 _regs()->CR3 |= USART_CR3_EIE;
             }
 
-            static inline void send(uint8_t* data, size_t size, TXDoneHandlerT cb)
+            static inline void send(uint8_t *data, size_t size, Callback cb)
             {
-                // Just set data pointer to buf provide undefined behaviour, need use cortex commands
-                Atomic::CompareExchange(&_data.txBuf, (uint8_t*)nullptr, data);
+                Atomic::CompareExchange(&_txData.buf, (uint8_t *)nullptr, data);
 
-                _data.txLen = size;
-
-                _data.txDoneHandler = cb;
+                _txData.len = size;
+                _txData.callback = cb;
 
                 _regs()->CR1 |= USART_CR1_TXEIE;
-            }
-
-            static inline void recv(uint8_t* data, size_t size, RXDoneHandlerT cb)
-            {
-                _data.rxBuf = data;
-                _data.rxLen = size;
-                _data.rxCnt = 0;
-
-                _data.rxDoneHandler = cb;
-
-                _regs()->CR1 |= USART_CR1_PEIE;
-                _regs()->CR3 |= USART_CR3_EIE;
-                _regs()->CR1 |= USART_CR1_RXNEIE;
             }
 
             static inline void dispatchIRQ()
@@ -245,39 +228,47 @@ namespace STM32
                 uint32_t CR3 = _regs()->CR3;
 
                 uint32_t errors = SR & (USART_SR_PE | USART_SR_FE | USART_SR_ORE | USART_SR_NE);
-                if (errors == 0u) {
-                    if ((SR & USART_SR_RXNE) != 0u && (CR1 & USART_CR1_RXNEIE) != 0u) {
+                if (errors == 0u)
+                {
+                    if ((SR & USART_SR_RXNE) != 0u && (CR1 & USART_CR1_RXNEIE) != 0u)
+                    {
                         _onRXNE();
                         return;
                     }
                 }
-                if (errors != 0u && ((CR3 & USART_CR3_EIE) != 0u || (CR1 & (USART_CR1_RXNEIE | USART_CR1_PEIE)) != 0u)) {
-                    if ((SR & USART_SR_RXNE) != 0u && (CR1 & USART_CR1_RXNEIE) != 0u) {
+                if (errors != 0u && ((CR3 & USART_CR3_EIE) != 0u || (CR1 & (USART_CR1_RXNEIE | USART_CR1_PEIE)) != 0u))
+                {
+                    if ((SR & USART_SR_RXNE) != 0u && (CR1 & USART_CR1_RXNEIE) != 0u)
+                    {
                         _onRXNE();
                     }
-                    if ((SR & USART_SR_ORE) != 0u && ((CR1 & USART_CR1_RXNEIE) != 0u || (CR3 & USART_CR3_EIE) != 0u)) {
+                    if ((SR & USART_SR_ORE) != 0u && ((CR1 & USART_CR1_RXNEIE) != 0u || (CR3 & USART_CR3_EIE) != 0u))
+                    {
                         _endRX();
                     }
-                    if (_errorHandler) {
+                    if (_errorHandler)
+                    {
                         _errorHandler();
                     }
                     return;
                 }
-                if ((SR & USART_SR_IDLE) != 0u && (CR1 & USART_CR1_IDLEIE) != 0u) {
+                if ((SR & USART_SR_IDLE) != 0u && (CR1 & USART_CR1_IDLEIE) != 0u)
+                {
                     _clearSeq();
                     _endRX();
                     _regs()->CR1 &= ~USART_CR1_IDLEIE;
-                    _data.rxBuf = nullptr;
-                    if (_data.rxIdleHandler) {
-                        _data.rxIdleHandler(_data.rxCnt);
-                    }
+                    _rxData.buf = nullptr;
+                    if (_rxData.callback)
+                        _rxData.callback();
                     return;
                 }
-                if (((SR & USART_SR_TXE) != 0u) && ((CR1 & USART_CR1_TXEIE) != 0u)) {
+                if (((SR & USART_SR_TXE) != 0u) && ((CR1 & USART_CR1_TXEIE) != 0u))
+                {
                     _onTXE();
                     return;
                 }
-                if (((SR & USART_SR_TC) != 0u) && ((CR1 & USART_CR1_TCIE) != 0u)) {
+                if (((SR & USART_SR_TC) != 0u) && ((CR1 & USART_CR1_TCIE) != 0u))
+                {
                     _endTX();
                     return;
                 }
@@ -293,29 +284,30 @@ namespace STM32
             }
             static inline void _onRXNE()
             {
-                *_data.rxBuf = (uint8_t)_regs()->DR;
+                *_rxData.buf = (uint8_t)_regs()->DR;
 
-                _data.rxBuf++;
-                _data.rxCnt++;
-                _data.rxLen--;
+                _rxData.buf++;
+                _rxData.cnt++;
+                _rxData.len--;
 
-                if (_data.rxLen == 0) {
-                    _data.rxBuf = nullptr;
+                if (_rxData.len == 0)
+                {
+                    _rxData.buf = nullptr;
                     _endRX();
-                    if (_data.rxDoneHandler) {
-                        _data.rxDoneHandler();
-                    }
+                    if (_rxData.callback)
+                        _rxData.callback();
                 }
             }
             static inline void _onTXE()
             {
-                _regs()->DR = (uint8_t)(*_data.txBuf);
+                _regs()->DR = (uint8_t)(*_txData.buf);
 
-                _data.txBuf++;
-                _data.txLen--;
+                _txData.buf++;
+                _txData.len--;
 
-                if (_data.txLen == 0) {
-                    _data.txBuf = nullptr;
+                if (_txData.len == 0)
+                {
+                    _txData.buf = nullptr;
                     _regs()->CR1 &= ~USART_CR1_TXEIE;
                     _regs()->CR1 |= USART_CR1_TCIE;
                 }
@@ -328,9 +320,8 @@ namespace STM32
             static inline void _endTX()
             {
                 _regs()->CR1 &= ~USART_CR1_TCIE;
-                if (_data.txDoneHandler) {
-                    _data.txDoneHandler();
-                }
+                if (_txData.callback)
+                    _txData.callback();
             }
         };
     }
@@ -351,92 +342,80 @@ namespace STM32
         USART1_BASE,
         USART1_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB2ENR, RCC_APB2ENR_USART1EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_USART1RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_USART1RST>>;
 #endif
 #if defined(USART2_BASE)
     using UART2_Driver = UART::Driver<
         USART2_BASE,
         USART2_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART2EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART2RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART2RST>>;
 #endif
 #if defined(USART3_BASE)
     using UART3_Driver = UART::Driver<
         USART3_BASE,
         USART3_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART3EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART3RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART3RST>>;
 #endif
 #if defined(UART4_BASE)
     using UART4_Driver = UART::Driver<
         UART4_BASE,
         UART4_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_UART4EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_UART4RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_UART4RST>>;
 #elif defined(USART4_BASE)
     using UART4_Driver = UART::Driver<
         USART4_BASE,
         USART4_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART4EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART4RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART4RST>>;
 #endif
 #if defined(UART5_BASE)
     using UART5_Driver = UART::Driver<
         UART5_BASE,
         UART5_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_UART5EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_UART5RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_UART5RST>>;
 #elif defined(USART5_BASE)
     using UART5_Driver = UART::Driver<
         USART5_BASE,
         USART5_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART5EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART5RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART5RST>>;
 #endif
 #if defined(USART6_BASE)
     using UART6_Driver = UART::Driver<
         USART6_BASE,
         USART6_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB2ENR, RCC_APB2ENR_USART6EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_USART6RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_USART6RST>>;
 #endif
 #if defined(UART7_BASE)
     using UART7_Driver = UART::Driver<
         UART7_BASE,
         UART7_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART7EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART7RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART7RST>>;
 #elif defined(USART7_BASE)
     using UART7_Driver = UART::Driver<
         USART7_BASE,
         USART7_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART7EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART7RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART7RST>>;
 #endif
 #if defined(UART8_BASE)
     using UART8_Driver = UART::Driver<
         UART8_BASE,
         UART8_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_UART8EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_UART8RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_UART8RST>>;
 #elif defined(USART8_BASE)
     using UART8_Driver = UART::Driver<
         USART8_BASE,
         USART8_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART8EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART8RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_USART8RST>>;
 #endif
 }
 

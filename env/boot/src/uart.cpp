@@ -8,8 +8,7 @@
 using namespace STM32;
 
 static void UART1_ErrorHandler(void);
-static void UART1_RxIdleHandler(size_t len);
-static void UART1_TxDoneHandler(void);
+static void UART1_RxIdleHandler(void);
 
 volatile uint8_t uartDataBuf[256];
 
@@ -35,17 +34,12 @@ static void UART1_ErrorHandler(void)
     // Do nothing for now
 }
 
-static void UART1_RxIdleHandler(size_t len)
+static void UART1_RxIdleHandler()
 {
-    UART1_Driver::send((uint8_t *)uartDataBuf, len, UART1_TxDoneHandler);   // echo, but need hadle
+    // UART1_Driver::send((uint8_t *)uartDataBuf, len, UART1_TxDoneHandler);   // echo, but need hadle
     UART1_Driver::listen((uint8_t *)uartDataBuf, 256, UART1_RxIdleHandler); // need restart
 
-    CLI::process((char *)uartDataBuf, len);
-}
-
-static void UART1_TxDoneHandler(void)
-{
-    // Do nothing for now
+    CLI::process((char *)uartDataBuf, UART1_Driver::getRXLen());
 }
 
 extern "C" void USART1_IRQHandler(void)
