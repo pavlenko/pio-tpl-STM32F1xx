@@ -37,8 +37,6 @@ static void UART1_ErrorHandler(void)
 
 static void UART1_RxIdleHandler(size_t len)
 {
-    // TODO handle commands here or just signal abou that
-    //  also restart listen (maybe need somehow disable this requitrement)
     UART1_Driver::send((uint8_t *)uartDataBuf, len, UART1_TxDoneHandler);   // echo, but need hadle
     UART1_Driver::listen((uint8_t *)uartDataBuf, 256, UART1_RxIdleHandler); // need restart
 

@@ -195,6 +195,11 @@ namespace STM32
                 _errorHandler = handler;
             }
 
+            static inline size_t getRXLen()
+            {
+                return _data.rxLen;
+            }
+
             static inline void listen(uint8_t* buf, size_t len, RXIdleHandlerT cb)
             {
                 Atomic::CompareExchange(&_data.rxBuf, (uint8_t*)nullptr, buf);

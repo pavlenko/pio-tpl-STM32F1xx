@@ -8,34 +8,6 @@
 #include <cstdlib>
 #include <cstring>
 
-// struct for allow pass string as template parameter & use at compile time
-// template <std::size_t N>
-// struct String
-// {
-//     char data[N];
-//     consteval String(const char (&str)[N])
-//     {
-//         std::copy_n(str, N, data);
-//     }
-//     // TODO operators
-// };
-
-// typedef void (*Handler_)(void);
-
-// enum class ArgType_
-// {
-//     INT,
-//     STR,
-// };
-
-// template <String tName, ArgType_ tType>
-// struct Arg_
-// {
-//     static constexpr const char *name = tName.data;
-//     static constexpr const ArgType_ type = tType;
-//     // TODO value here...
-// };
-
 namespace V2
 {
     enum class ArgType
@@ -51,12 +23,21 @@ namespace V2
         void *any_value;
     };
 
+    struct Arg
+    {
+        const char *name;
+        const ArgType type;
+        mutable ArgValue value;
+    };
+
     typedef void (*CommandHandler)(void);
 
     struct Command
     {
         const char *name;
         const CommandHandler handler;
+        const Arg *args_arr;
+        const uint8_t args_num;
     };
 
     typedef void (*ConsoleWriter)(const char *);
@@ -71,7 +52,7 @@ namespace V2
 
         static inline Command *find(const char *str)
         {
-            for (size_t i; i < _commands_num; i++)
+            for (size_t i = 0; i < _commands_num; i++)
             {
                 if (0 == strcmp(_commands_arr[i].name, str))
                     return &_commands_arr[i];
@@ -81,15 +62,16 @@ namespace V2
 
         static inline bool parseArg(const char *str, ArgType type, ArgValue *val)
         {
-            switch (type)
+            if (type == ArgType::INT)
             {
-            case ArgType::INT:
                 int32_t result = atol(str);
                 if (errno)
                     return false;
                 val->int_value = result;
                 return true;
-            case ArgType::STR:
+            }
+            else if (type == ArgType::STR)
+            {
                 val->str_value = str;
                 return true;
             }
@@ -107,6 +89,7 @@ namespace V2
         {
             const Command *cmd = nullptr;
             const char *token = nullptr;
+            uint8_t arg_index = 0;
 
             for (size_t i = 0; i < len; i++)
             {
@@ -125,7 +108,25 @@ namespace V2
                             write("ERR: command not found");
                             return;
                         }
-                        //TODO args
+                        else
+                        {
+                            if (arg_index == cmd->args_num)
+                            {
+                                write("ERR: too many args");
+                                return;
+                            }
+                            const Arg *arg = &cmd->args_arr[arg_index];
+                            ArgValue val;
+                            if (!parseArg(buf, arg->type, &val))
+                            {
+                                write("ERR: invalid value for ");
+                                write(arg->name);
+                                return;
+                            }
+                            arg->value = val;
+                            arg_index++;
+                        }
+                        token = nullptr;
                     }
                     else if (!token)
                     {
@@ -133,6 +134,11 @@ namespace V2
                     }
                 }
             }
+
+            if (!cmd)
+                return;
+
+            cmd->handler();
         }
         static inline void write(const char *str)
         {
