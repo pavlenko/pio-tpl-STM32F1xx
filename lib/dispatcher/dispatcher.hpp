@@ -3,10 +3,24 @@
 
 #include <cstdint>
 
-//TODO namespace,dispatcher,task,cb,wrappers,atomics
+#include "cmsis_compiler.h"
+
+// TODO namespace,dispatcher,task,cb,wrappers,atomics
 #ifndef DISPATCHER_MAX_TASKS
 #define DISPATCHER_MAX_TASKS 10
 #endif
+
+//TODO extract to separate lib, also make configurable via templates
+class Atomic
+{
+private:
+    uint32_t _sreg;
+
+public:
+    Atomic() : _sreg(__get_PRIMASK()) { __disable_irq(); }
+    ~Atomic() { __set_PRIMASK(_sreg); }
+    operator bool() { return false; }
+};
 
 typedef void (*TaskHandler)(void);
 
@@ -44,7 +58,7 @@ public:
         }
 
         Task task(handler);
-        //TODO atomic somehow DisableInterrupts di; //<-- wrap all below function body into atomic block
+        Atomic atomic;
 
         _tasks[_tasksTail] = task;
         _tasksTail++;
@@ -62,7 +76,8 @@ public:
         if (_tasksLen > 0)
         {
             Task &task = _tasks[_tasksHead];
-            {//TODO atomic somehow
+            {
+                Atomic atomic;
                 _tasksHead++;
 
                 if (_tasksHead >= DISPATCHER_MAX_TASKS)
