@@ -1,7 +1,7 @@
 #ifndef __CLI_HPP__
 #define __CLI_HPP__
 
-#include <console.hpp>
+#include <Console.hpp>
 
 void CLI_Writer(const char *str);
 
