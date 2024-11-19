@@ -5,25 +5,25 @@
 
 #include <AtomicBlock.hpp>
 
-// TODO namespace,dispatcher,task,cb,wrappers
 #ifndef DISPATCHER_MAX_TASKS
 #define DISPATCHER_MAX_TASKS 10
 #endif
 
-typedef void (*TaskHandler)(void);
-
-struct Task
-{
-    TaskHandler handler;
-    Task(TaskHandler &handler) : handler(handler) {}
-    void invoke()
-    {
-        handler();
-    }
-};
-
 namespace
 {
+    typedef void (*TaskHandler)(void);
+
+    struct Task
+    {
+        TaskHandler handler;
+        Task(TaskHandler handler = nullptr) : handler(handler) {}
+        inline void invoke()
+        {
+            if (handler)
+                handler();
+        }
+    };
+
     static Task _tasks[DISPATCHER_MAX_TASKS];
     static uint8_t _tasksLen;
     static uint8_t _tasksHead;
