@@ -1,27 +1,33 @@
-#ifndef __DISPATCHER_H__
-#define __DISPATCHER_H__
+#ifndef __DISPATCHER_HPP__
+#define __DISPATCHER_HPP__
 
-#include <stdint.h>
-#include <stm32cpp/Atomic.hpp>
+#include <cstdint>
 
-typedef void (*TaskT)(void);
-
+//TODO namespace,dispatcher,task,cb,wrappers,atomics
 #ifndef DISPATCHER_MAX_TASKS
 #define DISPATCHER_MAX_TASKS 10
 #endif
 
-// Private members
+typedef void (*TaskHandler)(void);
+
+struct Task
+{
+    TaskHandler handler;
+    Task(TaskHandler &handler) : handler(handler) {}
+    void invoke()
+    {
+        handler();
+    }
+};
+
 namespace
 {
-    static TaskT tasks[DISPATCHER_MAX_TASKS];
+    static Task _tasks[DISPATCHER_MAX_TASKS];
     static uint8_t _tasksLen;
     static uint8_t _tasksHead;
     static uint8_t _tasksTail;
 }
 
-//TODO move to separate lib
-//TODO weak integration with atomic for concrete arc
-//TODO add task wrapper for allow use class methods, etc...
 class Dispatcher
 {
     Dispatcher(const Dispatcher &) = delete;     // Prevent copy constructor
@@ -30,16 +36,17 @@ class Dispatcher
     void operator=(Dispatcher &&) = delete;      // Prevent reference
 
 public:
-    static bool pushTask(TaskT task)
+    static inline bool pushTask(TaskHandler &handler)
     {
         if (_tasksLen >= DISPATCHER_MAX_TASKS)
         {
             return false;
         }
 
-        DisableInterrupts di; //<-- wrap all below function body into atomic block
+        Task task(handler);
+        //TODO atomic somehow DisableInterrupts di; //<-- wrap all below function body into atomic block
 
-        tasks[_tasksTail] = task;
+        _tasks[_tasksTail] = task;
         _tasksTail++;
 
         if (_tasksTail >= DISPATCHER_MAX_TASKS)
@@ -50,13 +57,12 @@ public:
         return true;
     }
 
-    static void dispatch()
+    static inline void dispatch()
     {
         if (_tasksLen > 0)
         {
-            TaskT &task = tasks[_tasksHead];
-            ATOMIC
-            {
+            Task &task = _tasks[_tasksHead];
+            {//TODO atomic somehow
                 _tasksHead++;
 
                 if (_tasksHead >= DISPATCHER_MAX_TASKS)
@@ -64,9 +70,9 @@ public:
 
                 _tasksLen--;
             }
-            task();
+            task.invoke();
         }
     }
 };
 
-#endif // __DISPATCHER_H__
+#endif // __DISPATCHER_HPP__
