@@ -39,6 +39,8 @@ static void UART1_RxIdleHandler()
     // UART1_Driver::send((uint8_t *)uartDataBuf, len, UART1_TxDoneHandler);   // echo, but need hadle
     UART1_Driver::listen((uint8_t *)uartDataBuf, 256, UART1_RxIdleHandler); // need restart
 
+    //TODO copy data to cli input buffer first, then restart listen, and then process cli
+
     CLI::process((char *)uartDataBuf, UART1_Driver::getRXLen());
 }
 
