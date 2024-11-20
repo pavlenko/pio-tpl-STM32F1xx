@@ -46,6 +46,7 @@ int main(void)
 
     while (true)
     {
+        //TODO change IRQ handling to push task to dispatcher for execute it in main loop!!!
         Dispatcher::dispatch();
 
         // Console::process(nullptr, 0);
