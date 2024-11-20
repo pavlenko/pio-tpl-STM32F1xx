@@ -7,6 +7,12 @@
 
 using namespace STM32;
 
+#define UART1_RX_BUFFER_SIZE 255
+#define UART1_TX_BUFFER_SIZE 255
+
+static volatile uint8_t rxBuffer[UART1_RX_BUFFER_SIZE];
+static volatile uint8_t txBuffer[UART1_TX_BUFFER_SIZE];
+
 static void UART1_ErrorHandler(void);
 static void UART1_RxIdleHandler(void);
 
