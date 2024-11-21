@@ -2,18 +2,18 @@
 
 #include <string.h>
 
-#include <Dispatcher.hpp>
+// #include <Dispatcher.hpp>
 
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/Delay.hpp>
-#include <stm32cpp/I2C.hpp>
-#include <stm32cpp/SPI.hpp>
+// #include <stm32cpp/I2C.hpp>
+// #include <stm32cpp/SPI.hpp>
 #include <stm32cpp/IO.hpp>
 
 #include "uart.hpp"
 #include "cli.hpp"
 
-volatile uint32_t delay = 500;
+static volatile uint32_t delay = 500;
 
 int main(void)
 {
@@ -39,6 +39,7 @@ int main(void)
     // Led config
     IO::PC::enable();
     IO::PC13::configure<IO::Mode::OUTPUT>(IO::Speed::LOW);
+    IO::PC13::set();
     // Led config end
 
     UART1_Init();
@@ -47,14 +48,12 @@ int main(void)
     while (true)
     {
         //TODO change IRQ handling to push task to dispatcher for execute it in main loop!!!
-        Dispatcher::dispatch();
-
-        // Console::process(nullptr, 0);
+        // Dispatcher::dispatch();
 
         IO::PC13::tog();
         Delay::ms(delay);
-        CLI::write("OK\n");
-        Delay::ms(delay);
+        // CLI::write("OK\n");
+        // Delay::ms(delay);
     }
     return 0;
 }

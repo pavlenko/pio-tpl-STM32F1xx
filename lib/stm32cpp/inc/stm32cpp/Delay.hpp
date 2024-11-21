@@ -21,14 +21,18 @@ namespace STM32
         static inline void ms(uint32_t ms)
         {
             _ms = ms;
-            while (_ms)
-                ;
+            while (_ms > 0)
+            {
+                asm("nop");
+            }
         }
 
         static inline void dispatchIRQ()
         {
             if (_ms > 0)
+            {
                 _ms--;
+            }
         }
     };
 }
