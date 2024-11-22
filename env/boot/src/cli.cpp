@@ -25,3 +25,15 @@ void CLI_Init()
 
     CLI::configure(commands, sizeof(commands) / sizeof(V2::Command));
 }
+
+//TODO names & configurable params...
+#define MAX 256
+static char stdin[MAX];
+static char stdout[MAX];
+//TODO commands definitions here
+
+Console::App &ConsoleApp()
+{
+    static Console::App console{nullptr, 0, stdin, sizeof(stdin), stdout, sizeof(stdout)};
+    return console;
+}

@@ -48,6 +48,7 @@ static void UART1_RxIdleHandler()
     //TODO copy data to cli input buffer first, then restart listen, and then process cli
 
     CLI::process((char *)uartDataBuf, UART1_Driver::getRXLen());
+    ConsoleApp().process((char *)uartDataBuf, UART1_Driver::getRXLen());
 }
 
 extern "C" void USART1_IRQHandler(void)

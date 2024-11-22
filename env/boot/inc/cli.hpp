@@ -9,4 +9,6 @@ using CLI = V2::Console<CLI_Writer>;
 
 void CLI_Init();
 
+Console::App &ConsoleApp();
+
 #endif // __CLI_HPP__
