@@ -42,13 +42,11 @@ static void UART1_ErrorHandler(void)
 
 static void UART1_RxIdleHandler()
 {
-    // UART1_Driver::send((uint8_t *)uartDataBuf, len, UART1_TxDoneHandler);   // echo, but need hadle
-    UART1_Driver::listen((uint8_t *)uartDataBuf, 256, UART1_RxIdleHandler); // need restart
+    // Handle input
+    Console::instance().process((char *)uartDataBuf, UART1_Driver::getRXLen());
 
-    //TODO copy data to cli input buffer first, then restart listen, and then process cli
-
-    CLI::process((char *)uartDataBuf, UART1_Driver::getRXLen());
-    ConsoleApp().process((char *)uartDataBuf, UART1_Driver::getRXLen());
+    // Restart listen
+    UART1_Driver::listen((uint8_t *)uartDataBuf, 256, UART1_RxIdleHandler);
 }
 
 extern "C" void USART1_IRQHandler(void)

@@ -20,8 +20,7 @@ void CLI_Init()
     // TODO in/out buffers, also allow read/write them outside of console
     // TODO move commands array to global namespace or annonymous for allow access from help command
     static V2::Command commands[] = {
-        V2::Command{"?", CLI_HelpCommand}
-    };
+        V2::Command{"?", CLI_HelpCommand}};
 
     CLI::configure(commands, sizeof(commands) / sizeof(V2::Command));
 }
@@ -30,12 +29,20 @@ namespace Console
 {
     static uint8_t STDIN[STDIN_BUFFER_SIZE];
     static uint8_t STDOUT[STDOUT_BUFFER_SIZE];
-    // TODO commands definitions here
-}
 
-Console::App &ConsoleApp()
-{
-    using namespace Console;
-    static Console::App console{nullptr, 0, STDIN, STDIN_BUFFER_SIZE, STDOUT, STDOUT_BUFFER_SIZE};
-    return console;
+    static Command commands[] = {
+        {"?", CLI_HelpCommand}};
+
+    App &instance()
+    {
+        static App console{
+            commands,
+            sizeof(commands) / sizeof(Command),
+            (char *)STDIN,
+            STDIN_BUFFER_SIZE,
+            (char *)STDOUT,
+            STDOUT_BUFFER_SIZE};
+
+        return console;
+    }
 }
