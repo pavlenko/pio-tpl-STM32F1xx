@@ -4,7 +4,6 @@
 #include <functional>
 #include <stdint.h>
 #include <string.h>
-// #include <stm32f1xx_hal_uart.h>
 #include <stm32cpp/_common.hpp>
 #include <stm32cpp/Atomic.hpp>
 #include <stm32cpp/Clock.hpp>

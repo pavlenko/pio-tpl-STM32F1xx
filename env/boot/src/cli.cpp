@@ -1,41 +1,43 @@
 #include "cli.hpp"
 
-#include <stm32cpp/UART.hpp>
+#include <stm32cpp/IO.hpp>
 
-void CLI_Writer(const char *str)
-{
-    // TODO make buffered output, if received \n char then we can flush buffer
-    // TODO on flush - copy data to tx buffer, clear cli buffer, then send tx buffer...
-    STM32::UART1_Driver::send((uint8_t *)str, strlen(str), nullptr);
-}
-
-// define handlers...
-void CLI_HelpCommand()
-{
-    // TODO how to access commands list from here???
-}
-
-void CLI_Init()
-{
-    // TODO in/out buffers, also allow read/write them outside of console
-    // TODO move commands array to global namespace or annonymous for allow access from help command
-    static V2::Command commands[] = {
-        V2::Command{"?", CLI_HelpCommand}};
-
-    CLI::configure(commands, sizeof(commands) / sizeof(V2::Command));
-}
+#include "uart.hpp"
 
 namespace Console
 {
-    static uint8_t STDIN[STDIN_BUFFER_SIZE];
-    static uint8_t STDOUT[STDOUT_BUFFER_SIZE];
+    void Writer(uint8_t *buf, size_t len)
+    {
+        // STM32::IO::PC::disable();
+        UART1::write(buf, len);//TODO WTF???
+    }
+
+    static void CLI_HelpCommand()
+    {
+        instance().write("HELLO");
+    }
+
+#if defined(CONSOLE_STDIN_BUFFER_SIZE)
+    static const size_t STDIN_BUFFER_SIZE = CONSOLE_STDIN_BUFFER_SIZE;
+#else
+    static const size_t STDIN_BUFFER_SIZE = 64;
+#endif
+
+#if defined(CONSOLE_STDOUT_BUFFER_SIZE)
+    static const size_t STDOUT_BUFFER_SIZE = CONSOLE_STDOUT_BUFFER_SIZE;
+#else
+    static const size_t STDOUT_BUFFER_SIZE = 64;
+#endif
+
+    static uint8_t STDIN[STDIN_BUFFER_SIZE] = {0};
+    static uint8_t STDOUT[STDOUT_BUFFER_SIZE] = {0};
 
     static Command commands[] = {
         {"?", CLI_HelpCommand}};
 
-    App &instance()
+    App<Writer> &instance()
     {
-        static App console{
+        static App<Writer> console{
             commands,
             sizeof(commands) / sizeof(Command),
             (char *)STDIN,

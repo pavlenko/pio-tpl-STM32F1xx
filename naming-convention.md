@@ -4,6 +4,7 @@
 - method: `void methodName(){}`
 - public property: `int propertyName;`
 - private property: `int m_propertyName;` or `int mPropertyName;`
+- template arg: `template <typename TypeT>` or `template <typename tType>`
 
 # Functions and Function Argument Names
 

@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-// #include <Dispatcher.hpp>
+#include <Dispatcher.hpp>
 
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/Delay.hpp>
@@ -13,7 +13,7 @@
 #include "uart.hpp"
 #include "cli.hpp"
 
-static volatile uint32_t delay = 500;
+static volatile uint32_t delay = 1500;
 
 int main(void)
 {
@@ -42,8 +42,8 @@ int main(void)
     IO::PC13::set();
     // Led config end
 
-    UART1_Init();
-    CLI_Init();
+    UART1::init();
+    UART1::write("HELLO\n");
 
     while (true)
     {
@@ -52,7 +52,8 @@ int main(void)
 
         IO::PC13::tog();
         Delay::ms(delay);
-        // CLI::write("OK\n");
+        Console::instance().write("OK\n");
+        Console::instance().flush();
         // Delay::ms(delay);
     }
     return 0;

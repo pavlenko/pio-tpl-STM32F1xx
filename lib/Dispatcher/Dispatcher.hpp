@@ -5,6 +5,7 @@
 
 #include <AtomicBlock.hpp>
 
+//TODO make no static ???
 #ifndef DISPATCHER_MAX_TASKS
 #define DISPATCHER_MAX_TASKS 10
 #endif
@@ -38,7 +39,7 @@ class Dispatcher
     void operator=(Dispatcher &&) = delete;      // Prevent reference
 
 public:
-    static inline bool pushTask(TaskHandler &handler)
+    static inline bool pushTask(TaskHandler handler)
     {
         if (_tasksLen >= DISPATCHER_MAX_TASKS)
         {
