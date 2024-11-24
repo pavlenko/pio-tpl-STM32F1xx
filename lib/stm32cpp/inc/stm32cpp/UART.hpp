@@ -8,6 +8,11 @@
 #include <stm32cpp/Atomic.hpp>
 #include <stm32cpp/Clock.hpp>
 
+extern "C"
+{
+#include <stm32f1xx_hal_uart.h>
+}
+
 namespace STM32
 {
     namespace UART
@@ -15,7 +20,6 @@ namespace STM32
         enum class State
         {
             RESET,
-            INITIALIZED,
             READY,
             BUSY,
             BUSY_TX,
@@ -24,6 +28,30 @@ namespace STM32
             ERROR,
             ABORT,
         };
+
+        enum class Event : uint32_t
+        {
+            NONE = 0x00000000u,
+            TX_DONE = (1u << 0),
+            RX_DONE = (1u << 1),
+            RX_IDLE = (1u << 2),
+            ERROR = (1u << 3),
+        };
+
+        inline constexpr Event operator|(Event l, Event r)
+        {
+            return Event(static_cast<uint32_t>(l) | static_cast<uint32_t>(r));
+        }
+
+        inline constexpr Event operator&(Event l, Event r)
+        {
+            return Event(static_cast<uint32_t>(l) & static_cast<uint32_t>(r));
+        }
+
+        inline constexpr Event &operator|=(Event &l, Event r)
+        {
+            return l = l | r;
+        }
 
         enum class Mode
         {
@@ -90,15 +118,11 @@ namespace STM32
 
         namespace
         {
-            typedef void (*ErrorHandler)();
-            typedef void (*Callback)();
-
             struct _Data
             {
                 uint8_t *buf;
                 size_t len;
                 size_t cnt;
-                Callback callback;
             };
         }
 
@@ -106,9 +130,14 @@ namespace STM32
         class Driver
         {
         private:
+            static inline Event m_events;
             static inline _Data _txData;
             static inline _Data _rxData;
-            static inline ErrorHandler _errorHandler;
+
+            static inline void (*m_errorHandler)(void);
+            static inline void (*m_txDoneHandler)(void);
+            static inline void (*m_rxDoneHandler)(void);
+            static inline void (*m_rxIdleHandler)(void);
 
             static constexpr USART_TypeDef *_regs()
             {
@@ -188,9 +217,9 @@ namespace STM32
                 NVIC_DisableIRQ(TEventIRQn);
             }
 
-            static inline void setErrorHandler(ErrorHandler handler)
+            static inline void setErrorHandler(void (*handler)(void))
             {
-                _errorHandler = handler;
+                m_errorHandler = handler;
             }
 
             static inline size_t getRXLen()
@@ -198,26 +227,49 @@ namespace STM32
                 return _rxData.len;
             }
 
-            static inline void listen(uint8_t *buf, size_t len, Callback cb)
+            static inline void listen(uint8_t *buf, size_t len, void (*cb)(void))
             {
                 Atomic::CompareExchange(&_rxData.buf, (uint8_t *)nullptr, buf);
 
                 _rxData.len = len;
                 _rxData.cnt = 0;
-                _rxData.callback = cb;
+
+                m_rxIdleHandler = cb;
 
                 _regs()->CR1 |= USART_CR1_PEIE | USART_CR1_RXNEIE | USART_CR1_IDLEIE;
                 _regs()->CR3 |= USART_CR3_EIE;
             }
 
-            static inline void send(uint8_t *data, size_t size, Callback cb)
+            static inline void send(uint8_t *data, size_t size, void (*cb)(void))
             {
                 Atomic::CompareExchange(&_txData.buf, (uint8_t *)nullptr, data);
 
                 _txData.len = size;
-                _txData.callback = cb;
+
+                m_txDoneHandler = cb;
 
                 _regs()->CR1 |= USART_CR1_TXEIE;
+            }
+
+            static inline void dispatch()
+            {
+                if ((m_events & Event::ERROR) == Event::ERROR && m_errorHandler)
+                {
+                    m_errorHandler();
+                }
+                if ((m_events & Event::TX_DONE) == Event::TX_DONE && m_txDoneHandler)
+                {
+                    m_txDoneHandler();
+                }
+                if ((m_events & Event::RX_DONE) == Event::RX_DONE && m_rxDoneHandler)
+                {
+                    m_rxDoneHandler();
+                }
+                if ((m_events & Event::RX_IDLE) == Event::RX_IDLE && m_rxIdleHandler)
+                {
+                    m_rxIdleHandler();
+                }
+                m_events = Event::NONE;
             }
 
             static inline void dispatchIRQ()
@@ -243,32 +295,40 @@ namespace STM32
                     }
                     if ((SR & USART_SR_ORE) != 0u && ((CR1 & USART_CR1_RXNEIE) != 0u || (CR3 & USART_CR3_EIE) != 0u))
                     {
-                        _endRX();
+                        _regs()->CR1 &= ~(USART_CR1_RXNEIE | USART_CR1_PEIE);
+                        _regs()->CR3 &= ~(USART_CR3_EIE);
                     }
-                    if (_errorHandler)
-                    {
-                        _errorHandler();
-                    }
+                    m_events |= Event::ERROR;
                     return;
                 }
                 if ((SR & USART_SR_IDLE) != 0u && (CR1 & USART_CR1_IDLEIE) != 0u)
                 {
                     _clearSeq();
-                    _endRX();
-                    _regs()->CR1 &= ~USART_CR1_IDLEIE;
+                    _regs()->CR1 &= ~(USART_CR1_RXNEIE | USART_CR1_PEIE | USART_CR1_IDLEIE);
+                    _regs()->CR3 &= ~(USART_CR3_EIE);
                     _rxData.buf = nullptr;
-                    if (_rxData.callback)
-                        _rxData.callback();
+                    m_events |= Event::RX_IDLE;
                     return;
                 }
                 if (((SR & USART_SR_TXE) != 0u) && ((CR1 & USART_CR1_TXEIE) != 0u))
                 {
-                    _onTXE();
+                    _regs()->DR = (uint8_t)(*_txData.buf);
+
+                    _txData.buf++;
+                    _txData.len--;
+
+                    if (_txData.len == 0)
+                    {
+                        _txData.buf = nullptr;
+                        _regs()->CR1 &= ~USART_CR1_TXEIE;
+                        _regs()->CR1 |= USART_CR1_TCIE;
+                    }
                     return;
                 }
                 if (((SR & USART_SR_TC) != 0u) && ((CR1 & USART_CR1_TCIE) != 0u))
                 {
-                    _endTX();
+                    _regs()->CR1 &= ~USART_CR1_TCIE;
+                    m_events |= Event::TX_DONE;
                     return;
                 }
             }
@@ -292,35 +352,10 @@ namespace STM32
                 if (_rxData.len == 0)
                 {
                     _rxData.buf = nullptr;
-                    _endRX();
-                    if (_rxData.callback)
-                        _rxData.callback();
+                    _regs()->CR1 &= ~(USART_CR1_RXNEIE | USART_CR1_PEIE);
+                    _regs()->CR3 &= ~(USART_CR3_EIE);
+                    m_events |= Event::RX_DONE;
                 }
-            }
-            static inline void _onTXE()
-            {
-                _regs()->DR = (uint8_t)(*_txData.buf);
-
-                _txData.buf++;
-                _txData.len--;
-
-                if (_txData.len == 0)
-                {
-                    _txData.buf = nullptr;
-                    _regs()->CR1 &= ~USART_CR1_TXEIE;
-                    _regs()->CR1 |= USART_CR1_TCIE;
-                }
-            }
-            static inline void _endRX()
-            {
-                _regs()->CR1 &= ~(USART_CR1_RXNEIE | USART_CR1_PEIE);
-                _regs()->CR3 &= ~(USART_CR3_EIE);
-            }
-            static inline void _endTX()
-            {
-                _regs()->CR1 &= ~USART_CR1_TCIE;
-                if (_txData.callback)
-                    _txData.callback();
             }
         };
     }

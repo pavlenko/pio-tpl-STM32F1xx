@@ -58,6 +58,7 @@ namespace UART1
 
     static void RxIdleIRQHandler()
     {
+        // STM32::IO::PC::disable();
         // Dispatcher::pushTask(RxIdleEvent);
         Console::instance().process((char *)rxBuffer, STM32::UART1_Driver::getRXLen());
 

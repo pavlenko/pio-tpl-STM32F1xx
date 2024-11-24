@@ -6,14 +6,11 @@
 
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/Delay.hpp>
-// #include <stm32cpp/I2C.hpp>
-// #include <stm32cpp/SPI.hpp>
 #include <stm32cpp/IO.hpp>
+#include <stm32cpp/UART.hpp>
 
 #include "uart.hpp"
 #include "cli.hpp"
-
-static volatile uint32_t delay = 1500;
 
 int main(void)
 {
@@ -36,7 +33,8 @@ int main(void)
 
     Delay::init();
 
-    // Led config
+    // Led config TODO move to Board::LED1{init,on,off}
+    // TODO also get back delayed off logic, or create some new more usable
     IO::PC::enable();
     IO::PC13::configure<IO::Mode::OUTPUT>(IO::Speed::LOW);
     IO::PC13::set();
@@ -47,11 +45,16 @@ int main(void)
 
     while (true)
     {
+        STM32::UART1_Driver::dispatch();
+
         //TODO change IRQ handling to push task to dispatcher for execute it in main loop!!!
         // Dispatcher::dispatch();
 
+        Delay::ms(850);
         IO::PC13::tog();
-        Delay::ms(delay);
+        Delay::ms(150);
+        IO::PC13::tog();
+
         Console::instance().write("OK\n");
         Console::instance().flush();
         // Delay::ms(delay);
