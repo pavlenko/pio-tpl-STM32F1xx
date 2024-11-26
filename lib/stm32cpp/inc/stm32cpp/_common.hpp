@@ -49,32 +49,4 @@ enum class Result
     TIMEOUT,
 };
 
-template <typename tType, uint16_t tSize>
-class RingBuffer
-{
-public:
-    volatile tType _aucBuffer[tSize];
-    volatile uint32_t _iHead;
-    volatile uint32_t _iTail;
-
-    RingBuffer() : _iHead(0), _iTail(0)
-    {
-        memset((void*)_aucBuffer, 0, tSize);
-    }
-
-    void store_char(tType c)
-    {
-        uint32_t i = (uint32_t)(_iHead + 1) % tSize;
-
-        // if we should be storing the received character into the location
-        // just before the tail (meaning that the head would advance to the
-        // current location of the tail), we're about to overflow the buffer
-        // and so we don't write the character or advance the head.
-        if (i != _iTail) {
-            _aucBuffer[_iHead] = c;
-            _iHead = i;
-        }
-    }
-};
-
 #endif // __STM32_COMMON_HPP__

@@ -34,7 +34,7 @@ namespace UART1
         IO::PA9::configure<IO::Mode::ALTERNATE>(IO::Speed::FAST);
         IO::PA10::configure<IO::Mode::INPUT>(IO::Pull::PULL_UP); //<-- require pull-up if host has not it
 
-        UART1_Driver::init<UART::Config<
+        UART1_Driver::configure<UART::Config<
             UART::Mode::RX_TX,
             9600,
             UART::DataBits::_8BIT,

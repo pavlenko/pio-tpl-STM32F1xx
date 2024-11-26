@@ -1,7 +1,6 @@
 #ifndef __STM32_UART_HPP__
 #define __STM32_UART_HPP__
 
-#include <functional>
 #include <stdint.h>
 #include <string.h>
 #include <stm32cpp/_common.hpp>
@@ -13,90 +12,12 @@ extern "C"
 #include <stm32f1xx_hal_uart.h>
 }
 
+#include <stm32cpp/UART_definitions.hpp>
+
 namespace STM32
 {
     namespace UART
     {
-        enum class State
-        {
-            RESET,
-            READY,
-            BUSY,
-            BUSY_TX,
-            BUSY_RX,
-            BUSY_TX_RX,
-            ERROR,
-            ABORT,
-        };
-
-        enum class Event : uint32_t
-        {
-            NONE = 0x00000000u,
-            TX_DONE = (1u << 0),
-            RX_DONE = (1u << 1),
-            RX_IDLE = (1u << 2),
-            ERROR = (1u << 3),
-        };
-
-        inline constexpr Event operator|(Event l, Event r)
-        {
-            return Event(static_cast<uint32_t>(l) | static_cast<uint32_t>(r));
-        }
-
-        inline constexpr Event operator&(Event l, Event r)
-        {
-            return Event(static_cast<uint32_t>(l) & static_cast<uint32_t>(r));
-        }
-
-        inline constexpr Event &operator|=(Event &l, Event r)
-        {
-            return l = l | r;
-        }
-
-        enum class Mode
-        {
-            NONE = 0x00000000u,
-            RX = USART_CR1_RE,
-            TX = USART_CR1_TE,
-            RX_TX = USART_CR1_RE | USART_CR1_TE,
-        };
-
-        enum class StopBits
-        {
-            _1BIT = 0x00000000u,
-            _2BIT = USART_CR2_STOP_1,
-        };
-
-        enum class DataBits
-        {
-            _8BIT = 0x00000000u,
-            _9BIT = USART_CR1_M,
-        };
-
-        enum class Parity
-        {
-            NONE = 0x00000000u,
-            EVEN = USART_CR1_PCE,
-            ODD = USART_CR1_PCE | USART_CR1_PS,
-        };
-
-        enum class HWControl
-        {
-            NONE = 0x00000000u,
-            RTS = USART_CR3_RTSE,
-            CTS = USART_CR3_CTSE,
-            RTS_CTS = USART_CR3_RTSE | USART_CR3_CTSE,
-        };
-
-        enum class Oversampling
-        {
-            _16BIT = 0x00000000u,
-#if defined(USART_CR1_OVER8)
-            _8BIT = USART_CR1_OVER8,
-#endif
-        };
-
-        // BAUD = 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600
         template <
             Mode tMode,
             uint32_t tBaudRate,
@@ -130,9 +51,14 @@ namespace STM32
         class Driver
         {
         private:
+            static inline State m_state;
+            static inline bool m_busyTX;
+            static inline bool m_busyRX;
+            static inline Error m_errors;
             static inline Event m_events;
-            static inline _Data _txData;
-            static inline _Data _rxData;
+
+            static inline _Data m_txData;
+            static inline _Data m_rxData;
 
             static inline void (*m_errorHandler)(void);
             static inline void (*m_txDoneHandler)(void);
@@ -146,7 +72,7 @@ namespace STM32
 
         public:
             template <class TConfig>
-            static inline void init()
+            static inline void configure()
             {
                 static constexpr const uint32_t mode = static_cast<uint32_t>(TConfig::mode);
                 static constexpr const uint32_t baudRate = TConfig::baudRate;
@@ -160,6 +86,8 @@ namespace STM32
 
                 HAL_NVIC_SetPriority(TEventIRQn, 0, 0);
                 HAL_NVIC_EnableIRQ(TEventIRQn);
+
+                m_state = State::BUSY;
 
                 _regs()->CR1 &= ~USART_CR1_UE;
 
@@ -207,6 +135,8 @@ namespace STM32
                 CLEAR_BIT(_regs()->CR3, (USART_CR3_SCEN | USART_CR3_HDSEL | USART_CR3_IREN));
 
                 _regs()->CR1 |= USART_CR1_UE;
+
+                m_state = State::READY;
             }
 
             static void deinit()
@@ -215,6 +145,8 @@ namespace STM32
 
                 TClock::disable();
                 NVIC_DisableIRQ(TEventIRQn);
+
+                m_state = State::RESET;
             }
 
             static inline void setErrorHandler(void (*handler)(void))
@@ -224,31 +156,77 @@ namespace STM32
 
             static inline size_t getRXLen()
             {
-                return _rxData.len;
+                return m_rxData.len;
             }
 
-            static inline void listen(uint8_t *buf, size_t len, void (*cb)(void))
+            static inline Result listen(uint8_t *buf, size_t len, void (*cb)(void))
             {
-                Atomic::CompareExchange(&_rxData.buf, (uint8_t *)nullptr, buf);
+                if (m_state == State::READY && !m_busyRX)
+                {
+                    Atomic::CompareExchange(&m_rxData.buf, (uint8_t *)nullptr, buf);
 
-                _rxData.len = len;
-                _rxData.cnt = 0;
+                    m_rxData.len = len;
+                    m_rxData.cnt = 0;
 
-                m_rxIdleHandler = cb;
+                    m_rxIdleHandler = cb;
 
-                _regs()->CR1 |= USART_CR1_PEIE | USART_CR1_RXNEIE | USART_CR1_IDLEIE;
-                _regs()->CR3 |= USART_CR3_EIE;
+                    _regs()->CR1 |= USART_CR1_PEIE | USART_CR1_RXNEIE | USART_CR1_IDLEIE;
+                    _regs()->CR3 |= USART_CR3_EIE;
+
+                    m_errors = Error::NONE;
+                    m_busyRX = true;
+                    return Result::OK;
+                }
+                else
+                {
+                    return Result::BUSY;
+                }
             }
 
-            static inline void send(uint8_t *data, size_t size, void (*cb)(void))
+            static inline Result recv(uint8_t *buf, size_t len, void (*cb)(void))
             {
-                Atomic::CompareExchange(&_txData.buf, (uint8_t *)nullptr, data);
+                if (m_state == State::READY && !m_busyRX)
+                {
+                    Atomic::CompareExchange(&m_rxData.buf, (uint8_t *)nullptr, buf);
 
-                _txData.len = size;
+                    m_rxData.len = len;
+                    m_rxData.cnt = 0;
 
-                m_txDoneHandler = cb;
+                    m_rxDoneHandler = cb;
 
-                _regs()->CR1 |= USART_CR1_TXEIE;
+                    _regs()->CR1 |= USART_CR1_PEIE | USART_CR1_RXNEIE | USART_CR1_IDLEIE;
+                    _regs()->CR3 |= USART_CR3_EIE;
+
+                    m_errors = Error::NONE;
+                    m_busyRX = true;
+                    return Result::OK;
+                }
+                else
+                {
+                    return Result::BUSY;
+                }
+            }
+
+            static inline Result send(uint8_t *data, size_t size, void (*cb)(void))
+            {
+                if (m_state == State::READY && !m_busyTX)
+                {
+                    Atomic::CompareExchange(&m_txData.buf, (uint8_t *)nullptr, data);
+
+                    m_txData.len = size;
+
+                    m_txDoneHandler = cb;
+
+                    _regs()->CR1 |= USART_CR1_TXEIE;
+
+                    m_errors = Error::NONE;
+                    m_busyTX = true;
+                    return Result::OK;
+                }
+                else
+                {
+                    return Result::BUSY;
+                }
             }
 
             static inline void dispatch()
@@ -306,20 +284,22 @@ namespace STM32
                     _clearSeq();
                     _regs()->CR1 &= ~(USART_CR1_RXNEIE | USART_CR1_PEIE | USART_CR1_IDLEIE);
                     _regs()->CR3 &= ~(USART_CR3_EIE);
-                    _rxData.buf = nullptr;
+                    m_rxData.buf = nullptr;
                     m_events |= Event::RX_IDLE;
+                    m_busyRX = false;
                     return;
                 }
                 if (((SR & USART_SR_TXE) != 0u) && ((CR1 & USART_CR1_TXEIE) != 0u))
                 {
-                    _regs()->DR = (uint8_t)(*_txData.buf);
+                    _regs()->DR = (uint8_t)(*m_txData.buf);
 
-                    _txData.buf++;
-                    _txData.len--;
+                    m_txData.buf++;
+                    m_txData.cnt++;
+                    m_txData.len--;
 
-                    if (_txData.len == 0)
+                    if (m_txData.len == 0)
                     {
-                        _txData.buf = nullptr;
+                        m_txData.buf = nullptr;
                         _regs()->CR1 &= ~USART_CR1_TXEIE;
                         _regs()->CR1 |= USART_CR1_TCIE;
                     }
@@ -329,6 +309,7 @@ namespace STM32
                 {
                     _regs()->CR1 &= ~USART_CR1_TCIE;
                     m_events |= Event::TX_DONE;
+                    m_busyTX = false;
                     return;
                 }
             }
@@ -343,18 +324,19 @@ namespace STM32
             }
             static inline void _onRXNE()
             {
-                *_rxData.buf = (uint8_t)_regs()->DR;
+                *m_rxData.buf = (uint8_t)_regs()->DR;
 
-                _rxData.buf++;
-                _rxData.cnt++;
-                _rxData.len--;
+                m_rxData.buf++;
+                m_rxData.cnt++;
+                m_rxData.len--;
 
-                if (_rxData.len == 0)
+                if (m_rxData.len == 0)
                 {
-                    _rxData.buf = nullptr;
+                    m_rxData.buf = nullptr;
                     _regs()->CR1 &= ~(USART_CR1_RXNEIE | USART_CR1_PEIE);
                     _regs()->CR3 &= ~(USART_CR3_EIE);
                     m_events |= Event::RX_DONE;
+                    m_busyRX = false;
                 }
             }
         };
