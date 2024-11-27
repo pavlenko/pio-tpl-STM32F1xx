@@ -250,6 +250,11 @@ namespace STM32
                 m_events = Event::NONE;
             }
 
+            // TODO m_eventHandler(event) || m_errorHandler(error(?s))
+            // TODO event -> just set internal flag if not overrided for dispatch later
+            // TODO error -> same as above but for error event
+            // TODO 1 -> trigger callback -> call dispatcher add task -> task dispatch events
+            // TODO 2 -> trigger callback -> set event flag -> dispatch uart events manually in main loop
             static inline void dispatchIRQ()
             {
                 uint32_t SR = _regs()->SR;

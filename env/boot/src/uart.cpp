@@ -23,7 +23,6 @@ namespace UART1
     static volatile uint8_t txBuffer[TX_BUFFER_SIZE];
 
     static void RxIdleIRQHandler();
-    static void RxIdleEvent();
 
     void init()
     {
@@ -63,14 +62,6 @@ namespace UART1
         Console::instance().process((char *)rxBuffer, STM32::UART1_Driver::getRXLen());
 
         STM32::UART1_Driver::listen((uint8_t *)rxBuffer, RX_BUFFER_SIZE, RxIdleIRQHandler);
-    }
-
-    static void RxIdleEvent()
-    {
-        STM32::IO::PC::disable();
-        // Console::instance().process((char *)rxBuffer, STM32::UART1_Driver::getRXLen());
-
-        // STM32::UART1_Driver::listen((uint8_t *)rxBuffer, RX_BUFFER_SIZE, RxIdleIRQHandler);
     }
 }
 
