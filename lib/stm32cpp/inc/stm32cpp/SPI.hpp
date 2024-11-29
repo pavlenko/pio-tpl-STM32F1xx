@@ -6,6 +6,13 @@
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/IO.hpp>
 
+extern "C"
+{
+#include <stm32f1xx_hal_spi.h>
+}
+
+#include <stm32cpp/SPI_definitions.hpp>
+
 namespace STM32
 {
     namespace SPI
@@ -46,33 +53,6 @@ namespace STM32
             BUSY_TX_RX,
             ERROR,
             ABORT,
-        };
-
-        enum class Mode
-        {
-            SLAVE,
-            MASTER,
-        };
-
-        enum class BusLine
-        {
-            TWO_LINE,
-            TWO_LINE_RXONLY,
-            ONE_LINE_BIDIR,
-        };
-
-        enum class BusMode
-        {
-            MODE_0, // CPOL = 0, CPHA = 0
-            MODE_1, // CPOL = 0, CPHA = 1
-            MODE_2, // CPOL = 1, CPHA = 0
-            MODE_3, // CPOL = 1, CPHA = 1
-        };
-
-        enum class BitOrder
-        {
-            MSB,
-            LSB,
         };
 
         class Config
@@ -158,8 +138,8 @@ namespace STM32
              */
             void listen(void *pin, const Config config)
             {
-                //IO::PA10::attachIRQ<EXTIEdge::FALLING>();//TODO dev selected
-                //IO::PA10::attachIRQ<EXTIEdge::RISING>();//TODO dev unselected
+                // IO::PA10::attachIRQ<EXTIEdge::FALLING>();//TODO dev selected
+                // IO::PA10::attachIRQ<EXTIEdge::RISING>();//TODO dev unselected
             }
 
             /**
@@ -290,16 +270,14 @@ namespace STM32
         SPI1_BASE,
         SPI1_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB2ENR, RCC_APB2ENR_SPI1EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI1RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI1RST>>;
 #endif
 #if defined(SPI2_BASE)
     using SPI2_Driver = SPI::Driver<
         SPI2_BASE,
         SPI2_IRQn,
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_SPI2EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_SPI2RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_SPI2RST>>;
 #endif
 #if defined(SPI3_BASE)
     using SPI3_Driver = SPI::Driver<
@@ -307,8 +285,7 @@ namespace STM32
         SPI3_IRQn,
 
         Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_SPI3EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_SPI3RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB1RSTR, RCC_APB1RSTR_SPI3RST>>;
 #endif
 #if defined(SPI4_BASE)
     using SPI4_Driver = SPI::Driver<
@@ -316,8 +293,7 @@ namespace STM32
         SPI4_IRQn,
 
         Clock::ClockControl<&RCC_TypeDef::APB2ENR, RCC_APB2ENR_SPI4EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI4RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI4RST>>;
 #endif
 #if defined(SPI5_BASE)
     using SPI5_Driver = SPI::Driver<
@@ -325,8 +301,7 @@ namespace STM32
         SPI5_IRQn,
 
         Clock::ClockControl<&RCC_TypeDef::APB2ENR, RCC_APB2ENR_SPI5EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI5RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI5RST>>;
 #endif
 #if defined(SPI6_BASE)
     using SPI6_Driver = SPI::Driver<
@@ -334,8 +309,7 @@ namespace STM32
         SPI6_IRQn,
 
         Clock::ClockControl<&RCC_TypeDef::APB2ENR, RCC_APB2ENR_SPI6EN>,
-        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI6RST>
-    >;
+        Clock::ResetControl<&RCC_TypeDef::APB2RSTR, RCC_APB2RSTR_SPI6RST>>;
 #endif
 }
 
