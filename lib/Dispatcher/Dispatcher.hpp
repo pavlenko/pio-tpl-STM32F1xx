@@ -1,95 +1,23 @@
 #ifndef __DISPATCHER_HPP__
 #define __DISPATCHER_HPP__
 
+#include <stddef.h>
 #include <stdint.h>
 
 #include <AtomicBlock.hpp>
 
-// TODO make no static ???
-#ifndef DISPATCHER_MAX_TASKS
-#define DISPATCHER_MAX_TASKS 10
-#endif
-
-namespace
+namespace Dispatcher
 {
-    typedef void (*TaskHandler)(void);
-
-    struct Task
-    {
-        TaskHandler handler;
-        Task(TaskHandler handler = nullptr) : handler(handler) {}
-        inline void invoke()
-        {
-            if (handler)
-                handler();
-        }
-    };
-
-    static Task _tasks[DISPATCHER_MAX_TASKS];
-    static uint8_t _tasksLen;
-    static uint8_t _tasksHead;
-    static uint8_t _tasksTail;
-}
-
-class Dispatcher
-{
-    Dispatcher(const Dispatcher &) = delete;     // Prevent copy constructor
-    Dispatcher(Dispatcher &&) = delete;          // Prevent move constructor
-    void operator=(const Dispatcher &) = delete; // Prevent assignment
-    void operator=(Dispatcher &&) = delete;      // Prevent reference
-
-public:
-    static inline bool pushTask(TaskHandler handler)
-    {
-        if (_tasksLen >= DISPATCHER_MAX_TASKS)
-        {
-            return false;
-        }
-
-        Task task(handler);
-        AtomicBlock atomic;
-
-        _tasks[_tasksTail] = task;
-        _tasksTail++;
-
-        if (_tasksTail >= DISPATCHER_MAX_TASKS)
-            _tasksTail = 0;
-
-        _tasksLen++;
-
-        return true;
-    }
-
-    static inline void dispatch()
-    {
-        if (_tasksLen > 0)
-        {
-            Task &task = _tasks[_tasksHead];
-            {
-                AtomicBlock atomic;
-                _tasksHead++;
-
-                if (_tasksHead >= DISPATCHER_MAX_TASKS)
-                    _tasksHead = 0;
-
-                _tasksLen--;
-            }
-            task.invoke();
-        }
-    }
-};
-
-namespace Dispatcher_
-{
-    typedef void (*Callback)(void *argument);
+    typedef void (*TaskFunctionT)();
+    typedef void (*TaskCallbackT)(void *argument);
 
     class Task
     {
-        Callback m_callback;
+        TaskCallbackT m_callback;
         void *m_argument;
 
     public:
-        Task(Callback callback = nullptr, void *argument = nullptr)
+        Task(TaskCallbackT callback = nullptr, void *argument = nullptr)
             : m_callback(callback), m_argument(argument)
         {
         }
@@ -112,26 +40,39 @@ namespace Dispatcher_
         Dispatcher(const Dispatcher &) = delete;
         Dispatcher &operator=(const Dispatcher &) = delete;
 
+        template <class ObjectT, void (ObjectT::*method)()>
+        static void invokeMethod(void *object) { (static_cast<ObjectT *>(object)->*method)(); }
+
+        static void invokeFunction(void *function) { reinterpret_cast<TaskFunctionT>(function)(); }
+
+        template <class FunctorT>
+        static void invokeFunctor(void *functor) { (*reinterpret_cast<FunctorT *>(functor))(); }
+
     public:
         Dispatcher(Task *tasks, size_t tasksMax)
             : m_tasks(tasks), m_tasksMax(tasksMax)
         {
         }
 
-        template <class Functor>
-        bool pushTask(Functor &functor);
+        template <class FunctorT>
+        bool pushTask(FunctorT &functor) { return pushTask(&invokeFunctor<FunctorT>, (void *)&functor); }
 
-        template <class Functor>
-        bool pushTask(const Functor &functor);
+        template <class FunctorT>
+        bool pushTask(const FunctorT &functor) { return pushTask(&invokeFunctor<FunctorT>, (void *)&functor); }
 
-        template <class Object, void (Object::*method)()>
-        bool pushTask(Object *object);
+        template <class ObjectT, void (ObjectT::*method)()>
+        bool pushTask(ObjectT *object) { return pushTask(&invokeMethod<ObjectT, method>, object); }
 
-        bool pushTask(void (*function)());
+        bool pushTask(TaskFunctionT function) { return pushTask(invokeFunction, (void *)function); }
 
-        bool pushTask(Callback callback, void *argument)
+        inline bool pushTask(TaskCallbackT callback, void *argument);
+
+        inline void dispatch();
+    };
+
+    bool Dispatcher::pushTask(TaskCallbackT callback, void *argument)
         {
-            if (m_tasksNum >= DISPATCHER_MAX_TASKS)
+            if (m_tasksNum >= m_tasksMax)
                 return false;
 
             Task task(callback, argument);
@@ -140,7 +81,7 @@ namespace Dispatcher_
             m_tasks[m_tasksTail] = task;
             m_tasksTail++;
 
-            if (m_tasksTail >= DISPATCHER_MAX_TASKS)
+            if (m_tasksTail >= m_tasksMax)
                 m_tasksTail = 0;
 
             m_tasksNum++;
@@ -148,24 +89,23 @@ namespace Dispatcher_
             return true;
         }
 
-        void dispatch()
+    void Dispatcher::dispatch()
+    {
+        if (m_tasksNum > 0)
         {
-            if (m_tasksNum > 0)
+            Task &task = m_tasks[m_tasksHead];
             {
-                Task &task = m_tasks[m_tasksHead];
-                {
-                    AtomicBlock atomic;
-                    m_tasksHead++;
+                AtomicBlock atomic;
+                m_tasksHead++;
 
-                    if (m_tasksHead >= DISPATCHER_MAX_TASKS)
-                        m_tasksHead = 0;
+                if (m_tasksHead >= m_tasksMax)
+                    m_tasksHead = 0;
 
-                    m_tasksNum--;
-                }
-                task.invoke();
+                m_tasksNum--;
             }
+            task.invoke();
         }
-    };
+    }
 
     Dispatcher &instance();
 }

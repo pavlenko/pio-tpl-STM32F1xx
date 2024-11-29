@@ -47,8 +47,7 @@ int main(void)
     {
         STM32::UART1_Driver::dispatch();
 
-        //TODO change IRQ handling to push task to dispatcher for execute it in main loop!!!
-        // Dispatcher::dispatch();
+        Dispatcher::instance().dispatch();
 
         Delay::ms(850);
         IO::PC13::tog();
