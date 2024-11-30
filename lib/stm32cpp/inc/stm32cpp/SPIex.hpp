@@ -21,7 +21,7 @@ namespace STM32::SPIex
         BitOrder bo;
     };
 
-    class Driver
+    class Driver // <-- need interface for use as type instead of templated class
     {
     public:
         void configure(Config c);
@@ -31,9 +31,10 @@ namespace STM32::SPIex
         void dispatchIRQ();
     };
 
-    class Slave : Driver
+    class Slave
     {
-        Slave(Config c, uint8_t pin);
+    public:
+        Slave(Driver &drv, Config c, uint8_t pin);
     };
 
     struct Device
@@ -42,9 +43,10 @@ namespace STM32::SPIex
         Config conf;
     };
 
-    class Master : Driver
+    class Master
     {
     public:
+        Master(Driver &drv);
         void send(Device &dev, uint8_t *data, size_t size);
         void recv(Device &dev, uint8_t *data, size_t size);
         void exchange(Device &dev, uint8_t *txData, uint8_t *rxData, size_t size);
@@ -72,7 +74,8 @@ void example2()
     using namespace STM32;
 
     SPIex::Device dev;
-    SPIex::Master spi;
+    SPIex::Driver drv;
+    SPIex::Master spi{drv};
 
     uint8_t data[] = "TEST";
 
