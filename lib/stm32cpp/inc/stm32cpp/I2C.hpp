@@ -3,7 +3,9 @@
 
 #include <functional>
 #include <stdint.h>
+
 #include "_common.hpp"
+#include <stm32cpp/I2C_definitions.hpp>
 
 namespace STM32
 {
@@ -34,12 +36,6 @@ namespace STM32
 
         static_assert(static_cast<uint8_t>(N::TOTAL) != 0U, "Device doesn't support I2C");
 
-        enum class Direction
-        {
-            RX,
-            TX,
-        };
-
         enum class State
         {
             RESET = 0x00U,
@@ -62,13 +58,6 @@ namespace STM32
             ARLO = 0x0002U,
             AF = 0x0004U,
             OVR = 0x0008U,
-        };
-
-        enum class Speed : uint32_t
-        {
-            STANDARD = 100000,
-            FAST = 400000,
-            FAST_PLUS = 1000000,
         };
 
         template <uint32_t regs_base, IRQn_Type eventIRQn, IRQn_Type errorIRQn>

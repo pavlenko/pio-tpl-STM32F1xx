@@ -15,13 +15,14 @@ namespace STM32::SPIex
 
     struct Config
     {
-        uint32_t speed;
-        BusLine bl;
-        BusMode bm;
-        BitOrder bo;
+        const uint32_t speed;
+        const BusLine bl;
+        const BusMode bm;
+        const BitOrder bo;
     };
 
-    class Driver // <-- need interface for use as type instead of templated class
+    // Specific SPIn driver
+    class Driver
     {
     public:
         void configure(Config c);
@@ -58,7 +59,7 @@ void example1()
     using namespace STM32;
 
     IO::PA0 pin;
-    SPIex::Config cfg;
+    SPIex::Config cfg{1000};
     SPIex::Driver spi;
 
     uint8_t data[] = "TEST";
@@ -73,7 +74,7 @@ void example2()
 {
     using namespace STM32;
 
-    SPIex::Device dev;
+    SPIex::Device dev{0, {1000}};
     SPIex::Driver drv;
     SPIex::Master spi{drv};
 
