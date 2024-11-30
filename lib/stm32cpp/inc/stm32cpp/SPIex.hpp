@@ -3,45 +3,78 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// TODO need better API... (multi-slave bus)
-// TODO need to store config?
-// TODO need example of usages for both modes
+#include <stm32cpp/_common.hpp>
+#include <stm32cpp/IO.hpp>
+#include <stm32cpp/SPI_definitions.hpp>
+
+using namespace STM32::SPI;
+
 namespace STM32::SPIex
 {
-    class Device
+    typedef void (*Callback)(size_t size);
+
+    struct Config
     {
-        // Configure bus
-        void configure();
+        uint32_t speed;
+        BusLine bl;
+        BusMode bm;
+        BitOrder bo;
+    };
 
-        // Listen to CS pin changes
-        void listen(uint8_t);
-
-        // Set TX data
+    class Driver
+    {
+    public:
+        void configure(Config c);
         void send(uint8_t *data, size_t size);
-
-        // Set RX data
         void recv(uint8_t *data, size_t size);
-
-        // Set TX/RX data
         void exchange(uint8_t *txData, uint8_t *rxData, size_t size);
-
-        // Dispatch IRQ related to device
-        void dispatchIRQ(void);
+        void dispatchIRQ();
     };
 
-    // All communications like: select -> transfer -> deselect
-    class Master
+    class Slave : Driver
     {
-        // Send sata to device
-        void send(Device &dev, uint8_t *data, size_t size);
-
-        // Receive data from device
-        void recv(Device &dev, uint8_t *data, size_t size);
-
-        // Exchange data with device
-        void exchange(Device &dev, uint8_t *txData, uint8_t *rxData, size_t size);
-
-        // Dispatch IRQ related to master
-        void dispatchIRQ(void);
+        Slave(Config c, uint8_t pin);
     };
+
+    struct Device
+    {
+        uint8_t pin;
+        Config conf;
+    };
+
+    class Master : Driver
+    {
+    public:
+        void send(Device &dev, uint8_t *data, size_t size);
+        void recv(Device &dev, uint8_t *data, size_t size);
+        void exchange(Device &dev, uint8_t *txData, uint8_t *rxData, size_t size);
+    };
+}
+
+void example1()
+{
+    using namespace STM32;
+
+    IO::PA0 pin;
+    SPIex::Config cfg;
+    SPIex::Driver spi;
+
+    uint8_t data[] = "TEST";
+
+    spi.configure(cfg);
+    pin.clr();
+    spi.send(data, sizeof(data));
+    pin.set();
+}
+
+void example2()
+{
+    using namespace STM32;
+
+    SPIex::Device dev;
+    SPIex::Master spi;
+
+    uint8_t data[] = "TEST";
+
+    spi.send(dev, data, sizeof(data));
 }
