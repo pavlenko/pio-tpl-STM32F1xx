@@ -37,7 +37,8 @@
         "cstdlib": "cpp",
         "cerrno": "cpp",
         "functional": "cpp",
-        "atomic": "cpp"
+        "atomic": "cpp",
+        "type_traits": "cpp"
     },
     "workbench.colorCustomizations": {
         "editorUnnecessaryCode.opacity": "#000000C0"

@@ -2,16 +2,22 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <type_traits>
 
 #include <stm32cpp/_common.hpp>
 #include <stm32cpp/IO.hpp>
 #include <stm32cpp/SPI_definitions.hpp>
 
+extern "C"
+{
+#include <stm32f1xx_hal_spi.h>
+}
+
 using namespace STM32::SPI;
 
 namespace STM32::SPIex
 {
-    typedef void (*Callback)(size_t size);
+    using Callback = std::add_pointer_t<void(size_t size)>;
 
     struct Config
     {
@@ -21,21 +27,35 @@ namespace STM32::SPIex
         const BitOrder bo;
     };
 
-    // Specific SPIn driver
+    template <uint32_t RegsAddrT, IRQn_Type IRQnT, typename ClockT>
     class Driver
     {
     public:
-        void configure(Config c);
-        void send(uint8_t *data, size_t size);
-        void recv(uint8_t *data, size_t size);
-        void exchange(uint8_t *txData, uint8_t *rxData, size_t size);
-        void dispatchIRQ();
+        static void enable();
+
+        static void disable();
+
+        static void configure(Config config);
+
+        static bool busy();
+
+        static void send(uint8_t *data, size_t size);
+
+        static void recv(uint8_t *data, size_t size);
+
+        static void dispatchIRQ();
     };
 
+    template <class DriverT>
     class Slave
     {
     public:
-        Slave(Driver &drv, Config c, uint8_t pin);
+        template <class PinT>
+        static void listen();
+
+        static void send(uint8_t *data, size_t size);
+
+        static void recv(uint8_t *data, size_t size);
     };
 
     struct Device
@@ -44,41 +64,15 @@ namespace STM32::SPIex
         Config conf;
     };
 
+    // Exchange???
+    template <class DriverT>
     class Master
     {
     public:
-        Master(Driver &drv);
-        void send(Device &dev, uint8_t *data, size_t size);
-        void recv(Device &dev, uint8_t *data, size_t size);
-        void exchange(Device &dev, uint8_t *txData, uint8_t *rxData, size_t size);
+        static void send(Device &dev, uint8_t *data, size_t size);
+
+        static void recv(Device &dev, uint8_t *data, size_t size);
+
+        static void dispatchIRQ();
     };
-}
-
-void example1()
-{
-    using namespace STM32;
-
-    IO::PA0 pin;
-    SPIex::Config cfg{1000};
-    SPIex::Driver spi;
-
-    uint8_t data[] = "TEST";
-
-    spi.configure(cfg);
-    pin.clr();
-    spi.send(data, sizeof(data));
-    pin.set();
-}
-
-void example2()
-{
-    using namespace STM32;
-
-    SPIex::Device dev{0, {1000}};
-    SPIex::Driver drv;
-    SPIex::Master spi{drv};
-
-    uint8_t data[] = "TEST";
-
-    spi.send(dev, data, sizeof(data));
 }
