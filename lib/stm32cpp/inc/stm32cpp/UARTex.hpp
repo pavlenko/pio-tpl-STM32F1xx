@@ -2,6 +2,11 @@
 
 #include <stm32cpp/UART_definitions.hpp>
 
+extern "C"
+{
+#include <stm32f1xx_hal_uart.h>
+}
+
 using namespace STM32::UART;
 
 namespace STM32::UARTex

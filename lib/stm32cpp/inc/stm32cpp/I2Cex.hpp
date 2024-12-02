@@ -4,12 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <stm32cpp/I2C_definitions.hpp>
+
 extern "C"
 {
 #include <stm32f1xx_hal_i2c.h>
 }
-
-#include <stm32cpp/I2C_definitions.hpp>
 
 using namespace STM32::I2C;
 
@@ -18,24 +18,27 @@ namespace STM32::I2Cex
     using AddrCallback = std::add_pointer_t<void(Direction dir)>;
     using DoneCallback = std::add_pointer_t<void(size_t size)>;
 
+    //TODO all methods to driver before split to master/slave/etc
     template <uint32_t RegsT, IRQn_Type EventIRQn, IRQn_Type ErrorIRQn, class ClockT, class DMAtxT, class DMArxT>
     class Driver
     {
-        static void enable(); // master/slave
+        static void enable();
 
-        static void disable(); // master/slave
+        static void disable();
 
-        static void configure(Speed speed); // master/slave
+        static void configure(Speed speed);
 
-        static void send(uint8_t *data, size_t size); // master/slave
+        static void listen(uint8_t address);
 
-        static void recv(uint8_t *data, size_t size); // master/slave
+        static void send(uint8_t *data, size_t size);
 
-        static bool busy(); // master/slave
+        static void recv(uint8_t *data, size_t size);
 
-        static void dispatchEventIRQ(); // master/slave
+        static bool busy();
 
-        static void dispatchErrorIRQ(); // master/slave
+        static void dispatchEventIRQ();
+
+        static void dispatchErrorIRQ();
     };
 
     template <class DriverT>
