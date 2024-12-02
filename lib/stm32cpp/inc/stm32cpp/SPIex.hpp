@@ -38,17 +38,9 @@ namespace STM32::SPIex
     {
     public:
         static void enable();
-
         static void disable();
-
         static void configure(Config config);
-
-        static void send(uint8_t *data, size_t size);
-
-        static void recv(uint8_t *data, size_t size);
-
         static bool busy();
-
         static void dispatchIRQ();
     };
 
@@ -58,6 +50,8 @@ namespace STM32::SPIex
     public:
         template <class PinT>
         static void listen();
+        static void send(uint8_t *data, size_t size);
+        static void recv(uint8_t *data, size_t size);
     };
 
     template <class DriverT>
@@ -65,7 +59,6 @@ namespace STM32::SPIex
     {
     public:
         static void send(Device &dev, uint8_t *data, size_t size);
-
         static void recv(Device &dev, uint8_t *data, size_t size);
     };
 }
