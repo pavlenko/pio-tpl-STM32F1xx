@@ -18,46 +18,39 @@ namespace STM32::I2Cex
     using AddrCallback = std::add_pointer_t<void(Direction dir)>;
     using DoneCallback = std::add_pointer_t<void(size_t size)>;
 
-    struct Device
+    struct Config
     {
-        const uint8_t address;
+        const uint16_t address;
         const Speed speed;
+        //add: generall call; no-strech
     };
 
     template <uint32_t RegsT, IRQn_Type EventIRQn, IRQn_Type ErrorIRQn, class ClockT, class DMAtxT, class DMArxT>
     class Driver
     {
+    public:
+        // enable I2C; enable IRQ
         static void enable();
+        // disable I2C; disable IRQ
         static void disable();
-        static void configure(Speed speed);
+        // slave: set ownAddress; set bus speed
+        static void configure(Config &config);
+        // slave: enable IRQ flags
+        static void listen();
+        // master: enable IRQ flags, set bus speed
+        static void select(Config &device);
+        // slave(master?): send response
+        static void send(uint8_t *data, uint16_t size);
+        // slave(master?): read incoming data
+        static void recv(uint8_t *data, uint16_t size);
+        // master
+        static void memSet(uint16_t reg, uint8_t *data, uint16_t size);
+        // master
+        static void memGet(uint16_t reg, uint8_t *data, uint16_t size);
+        // check if not ready -> get state
         static bool busy();
+        // need separate for master/slave
         static void dispatchEventIRQ();
         static void dispatchErrorIRQ();
-    };
-
-    template <class DriverT>
-    class Slave
-    {
-        static void listen(uint8_t address, AddrCallback cb);
-        static void send(uint8_t *data, size_t size);
-        static void recv(uint8_t *data, size_t size);
-    };
-
-    template <class DriverT>
-    class Master
-    {
-    public:
-        static void send(Device &dev, uint8_t *data, size_t size);
-        static void recv(Device &dev, uint8_t *data, size_t size);
-    };
-
-    template <class DriverT>
-    class Memory
-    {
-        template <typename T>
-        static void set(Device &dev, T address, uint8_t *data, size_t size);
-
-        template <typename T>
-        static void get(Device &dev, T address, uint8_t *data, size_t size);
     };
 }

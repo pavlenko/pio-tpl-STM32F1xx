@@ -5,7 +5,6 @@
 #include <type_traits>
 
 #include <stm32cpp/_common.hpp>
-#include <stm32cpp/IO.hpp>
 #include <stm32cpp/SPI_definitions.hpp>
 
 extern "C"
@@ -37,28 +36,27 @@ namespace STM32::SPIex
     class Driver
     {
     public:
-        static void enable();
-        static void disable();
+        // enable SPI, enable IRQ vector
+        static void enable(void);
+        // disable SPI, disable IRQ vector
+        static void disable(void);
+        // slave: configure bus
         static void configure(Config config);
+        // master: configure bus, set SS pin for use
+        static void select(Config config);
+        // slave: listen for SS pin changes
+        template <class PinT>
+        static void listen(void);
+        // both: send data
+        static void send(uint8_t *data, uint16_t size);
+        // both: read data
+        static void recv(uint8_t *data, uint16_t size);
+        // master:
+        static void memSet(uint32_t reg, uint8_t *data, uint16_t size);
+        // master:
+        static void memGet(uint32_t reg, uint8_t *data, uint16_t size);
+        // check ready -> get state
         static bool busy();
         static void dispatchIRQ();
-    };
-
-    template <class DriverT>
-    class Slave
-    {
-    public:
-        template <class PinT>
-        static void listen();
-        static void send(uint8_t *data, size_t size);
-        static void recv(uint8_t *data, size_t size);
-    };
-
-    template <class DriverT>
-    class Master
-    {
-    public:
-        static void send(Device &dev, uint8_t *data, size_t size);
-        static void recv(Device &dev, uint8_t *data, size_t size);
     };
 }
