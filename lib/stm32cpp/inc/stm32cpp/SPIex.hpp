@@ -27,7 +27,7 @@ namespace STM32::SPIex
         const BitOrder bo;
     };
 
-    template <uint32_t RegsAddrT, IRQn_Type IRQnT, typename ClockT>
+    template <uint32_t RegsT, IRQn_Type IRQnT, class ClockT, class DMAtxT, class DMArxT>
     class Driver
     {
     public:
@@ -37,11 +37,11 @@ namespace STM32::SPIex
 
         static void configure(Config config);
 
-        static bool busy();
-
         static void send(uint8_t *data, size_t size);
 
         static void recv(uint8_t *data, size_t size);
+
+        static bool busy();
 
         static void dispatchIRQ();
     };
@@ -52,10 +52,6 @@ namespace STM32::SPIex
     public:
         template <class PinT>
         static void listen();
-
-        static void send(uint8_t *data, size_t size);
-
-        static void recv(uint8_t *data, size_t size);
     };
 
     struct Device
@@ -64,7 +60,6 @@ namespace STM32::SPIex
         Config conf;
     };
 
-    // Exchange???
     template <class DriverT>
     class Master
     {
@@ -72,7 +67,5 @@ namespace STM32::SPIex
         static void send(Device &dev, uint8_t *data, size_t size);
 
         static void recv(Device &dev, uint8_t *data, size_t size);
-
-        static void dispatchIRQ();
     };
 }

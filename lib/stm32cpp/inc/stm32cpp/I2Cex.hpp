@@ -18,28 +18,30 @@ namespace STM32::I2Cex
     using AddrCallback = std::add_pointer_t<void(Direction dir)>;
     using DoneCallback = std::add_pointer_t<void(size_t size)>;
 
-    template <uint32_t RegsAddrT, IRQn_Type EventIRQn, IRQn_Type ErrorIRQn, class ClockT>
+    template <uint32_t RegsT, IRQn_Type EventIRQn, IRQn_Type ErrorIRQn, class ClockT, class DMAtxT, class DMArxT>
     class Driver
     {
-        static void enable();
+        static void enable(); // master/slave
 
-        static void disable();
+        static void disable(); // master/slave
 
-        static void configure(Speed speed);
+        static void configure(Speed speed); // master/slave
+
+        static void send(uint8_t *data, size_t size); // master/slave
+
+        static void recv(uint8_t *data, size_t size); // master/slave
+
+        static bool busy(); // master/slave
+
+        static void dispatchEventIRQ(); // master/slave
+
+        static void dispatchErrorIRQ(); // master/slave
     };
 
     template <class DriverT>
     class Slave
     {
-        static void configure(Speed speed);
-
         static void listen(uint8_t address, AddrCallback cb);
-
-        static void send(uint8_t *data, size_t size, DoneCallback cb = nullptr);
-
-        static void recv(uint8_t *data, size_t size, DoneCallback cb = nullptr);
-
-        static void dispatchIRQ();
     };
 
     struct Device
@@ -61,7 +63,5 @@ namespace STM32::I2Cex
 
         template <typename T>
         static void memGet(Device &dev, T address, uint8_t *data, size_t size, DoneCallback cb = nullptr);
-
-        static void dispatchIRQ();
     };
 }

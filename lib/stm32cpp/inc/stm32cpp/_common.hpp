@@ -39,8 +39,6 @@
 #error "STM32YYxx chip series is not defined"
 #endif
 
-#include <string.h>
-
 enum class Result
 {
     OK,
