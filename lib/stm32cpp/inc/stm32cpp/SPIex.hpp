@@ -27,6 +27,12 @@ namespace STM32::SPIex
         const BitOrder bo;
     };
 
+    template <class PinT>
+    struct Device
+    {
+        const Config conf;
+    };
+
     template <uint32_t RegsT, IRQn_Type IRQnT, class ClockT, class DMAtxT, class DMArxT>
     class Driver
     {
@@ -52,12 +58,6 @@ namespace STM32::SPIex
     public:
         template <class PinT>
         static void listen();
-    };
-
-    struct Device
-    {
-        uint8_t pin;
-        Config conf;
     };
 
     template <class DriverT>

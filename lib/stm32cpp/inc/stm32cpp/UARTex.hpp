@@ -19,19 +19,12 @@ namespace STM32::UARTex
     class Driver
     {
         static void enable();
-
         static void disable();
-
         static void configure(Config config);
-
         static void send(uint8_t *data, uint16_t size);
-
         static void recv(uint8_t *data, uint16_t size);
-
         static bool busyTX();
-
         static bool busyRX();
-
         static void dispatchIRQ();
     };
 }
