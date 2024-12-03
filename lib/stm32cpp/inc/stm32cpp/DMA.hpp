@@ -37,7 +37,7 @@ namespace STM32
             PRIORITY_VERY_HIGH = DMA_CCR_PL,
         };
 
-        inline Config operator|(Config lft, Config rgt)
+        inline constexpr Config operator|(Config lft, Config rgt)
         {
             return Config(static_cast<uint32_t>(lft) | static_cast<uint32_t>(rgt));
         }
@@ -65,24 +65,24 @@ namespace STM32
                 return reinterpret_cast<DMA_Channel_TypeDef *>(tRegsAddress);
             }
 
+        public:
             template <Flag tFlag>
-            static inline bool _getFlag()
+            static inline bool getFlag()
             {
                 return tDriver::template getChannelFlag<tChannel, tFlag>();
             }
 
             template <Flag tFlag>
-            static inline void _clrFlag()
+            static inline void clrFlag()
             {
                 tDriver::template clrChannelFlag<tChannel, tFlag>();
             }
 
-            static inline void _clrFlags()
+            static inline void clrFlags()
             {
                 tDriver::template clrChannelFlags<tChannel>();
             }
 
-        public:
             static inline void setTransferCallback(TransferCallbackT cb)
             {
                 _transferCallback = cb;
@@ -93,7 +93,7 @@ namespace STM32
                 _errorCallback = cb;
             }
 
-            template <typename tConfig>
+            template <Config tConfig>
             static inline void transfer(const void *buffer, volatile void *periph, uint16_t len)
             {
                 static constexpr auto config = static_cast<uint32_t>(tConfig);
@@ -119,7 +119,7 @@ namespace STM32
             {
                 _regs()->CCR &= ~(DMA_CCR_TEIE | DMA_CCR_HTIE | DMA_CCR_TCIE);
                 _regs()->CCR &= ~(DMA_CCR_EN);
-                _clrFlags();
+                clrFlags();
             }
 
             static inline bool isReady()
@@ -129,17 +129,17 @@ namespace STM32
 
             static inline void dispatchIRQ()
             {
-                if ((_regs()->CCR & DMA_CCR_TCIE) != 0u && _getFlag<Flag::TRANSFER_COMPLETE>())
+                if ((_regs()->CCR & DMA_CCR_TCIE) != 0u && getFlag<Flag::TRANSFER_COMPLETE>())
                 {
-                    _clrFlag<Flag::TRANSFER_COMPLETE>();
+                    clrFlag<Flag::TRANSFER_COMPLETE>();
                     if (_transferCallback)
                         _transferCallback();
                 }
 
-                if ((_regs()->CCR & DMA_CCR_TEIE) != 0u && _getFlag<Flag::ERROR>())
+                if ((_regs()->CCR & DMA_CCR_TEIE) != 0u && getFlag<Flag::ERROR>())
                 {
                     _regs()->CCR &= ~(DMA_CCR_TEIE | DMA_CCR_HTIE | DMA_CCR_TCIE);
-                    _clrFlags();
+                    clrFlags();
                     if (_errorCallback)
                         _errorCallback();
                 }
@@ -172,7 +172,7 @@ namespace STM32
             template <uint8_t tChannel, Flag tFlag>
             static inline void clrChannelFlag()
             {
-                _regs()->IFCR |= (1 << ((tChannel - 1) * 4) + static_cast<uint32_t>(tFlag));
+                _regs()->IFCR |= (1 << ((tChannel - 1) * 4 + static_cast<uint32_t>(tFlag)));
             }
 
             template <uint8_t tChannel>

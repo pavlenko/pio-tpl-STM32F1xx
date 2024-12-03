@@ -6,8 +6,10 @@
 
 #include <stm32cpp/Clock.hpp>
 #include <stm32cpp/Delay.hpp>
+#include <stm32cpp/DMA.hpp>
 #include <stm32cpp/IO.hpp>
 #include <stm32cpp/UART.hpp>
+#include <stm32cpp/UARTex.hpp>
 
 #include "uart.hpp"
 #include "cli.hpp"
@@ -42,6 +44,18 @@ int main(void)
 
     UART1::init();
     UART1::write("HELLO\n");
+
+    // test start
+    using U1 = UARTex::Driver<
+        USART1_BASE,
+        USART1_IRQn,
+        Clock::ClockControl<&RCC_TypeDef::APB1ENR, RCC_APB1ENR_USART2EN>,
+        DMA1_Channel1,
+        DMA1_Channel2>;
+
+    uint8_t test[] = "TEST";
+    U1::sendDMA(test, sizeof(test));
+    // test end
 
     while (true)
     {
