@@ -50,14 +50,13 @@ namespace STM32
             ERROR,
         };
 
-        using TransferCallbackT = std::add_pointer_t<void()>;// TODO use from common
         using ErrorCallbackT = std::add_pointer_t<void()>;
 
         template <class tDriver, uint32_t tRegsAddress, IRQn_Type tEventIRQn, uint8_t tChannel>
         class Channel
         {
         private:
-            static inline TransferCallbackT _transferCallback;
+            static inline TransferCallback _transferCallback;
             static inline ErrorCallbackT _errorCallback;
 
             static constexpr DMA_Channel_TypeDef *_regs()
@@ -78,12 +77,17 @@ namespace STM32
                 tDriver::template clrChannelFlag<tChannel, tFlag>();
             }
 
+            static inline void clrFlagTC()
+            {
+                tDriver::template clrChannelFlag<tChannel, Flag::TRANSFER_COMPLETE>();
+            }
+
             static inline void clrFlags()
             {
                 tDriver::template clrChannelFlags<tChannel>();
             }
 
-            static inline void setTransferCallback(TransferCallbackT cb)
+            static inline void setTransferCallback(TransferCallback cb)
             {
                 _transferCallback = cb;
             }
@@ -93,11 +97,8 @@ namespace STM32
                 _errorCallback = cb;
             }
 
-            template <Config tConfig>
-            static inline void transfer(const void *buffer, volatile void *periph, uint16_t len)
+            static inline void transfer(Config config, const void *buffer, volatile void *periph, uint16_t len)
             {
-                static constexpr auto config = static_cast<uint32_t>(tConfig);
-
                 tDriver::enable();
 
                 _regs()->CCR = 0x00000000u;
@@ -107,7 +108,7 @@ namespace STM32
                 _regs()->CPAR = reinterpret_cast<uint32_t>(periph);
 
                 NVIC_EnableIRQ(tEventIRQn);
-                _regs()->CCR = config | DMA_CCR_EN | DMA_CCR_TEIE | DMA_CCR_TCIE;
+                _regs()->CCR = static_cast<uint32_t>(config) | DMA_CCR_EN | DMA_CCR_TEIE | DMA_CCR_TCIE;
             }
 
             static inline uint16_t getRemaining()
