@@ -31,20 +31,38 @@ namespace STM32::UARTex
         static void configure(Config config);
         // send data
         static void send(uint8_t *data, uint16_t size);
+
         static void sendDMA(uint8_t *data, uint16_t size)
         {
             while (busyTX())
                 asm("nop");
 
             DMA1_Channel1::clrFlag<DMA::Flag::TRANSFER_COMPLETE>();
-            // DMA1_Channel1::setTransferCallback();//<-- need internal callback
 
-            regs()->CR1 |= USART_CR3_DMAT;
+            regs()->CR1 |= USART_CR1_TCIE;
+            regs()->CR3 |= USART_CR3_DMAT;
 
+            DMA1_Channel1::setTransferCallback([](){});
             DMA1_Channel1::transfer<DMA::Config::MEM_2_PER | DMA::Config::MINC>(data, &regs()->DR, size);
         }
+
         // recv data
         static void recv(uint8_t *data, uint16_t size);
+
+        static void recvDMA(uint8_t *data, uint16_t size)
+        {
+            while (busyRX())
+                asm("nop");
+
+            DMA1_Channel1::clrFlag<DMA::Flag::TRANSFER_COMPLETE>();
+
+            regs()->CR1 |= USART_CR1_IDLEIE | USART_CR1_PEIE;
+            regs()->CR3 |= USART_CR3_DMAR | USART_CR3_EIE;
+
+            DMA1_Channel1::setTransferCallback([](){});
+            DMA1_Channel1::transfer<DMA::Config::PER_2_MEM | DMA::Config::MINC>(data, &regs()->DR, size);
+        }
+
         // check ready tx
         static bool busyTX() { return false; }
         // check ready rx

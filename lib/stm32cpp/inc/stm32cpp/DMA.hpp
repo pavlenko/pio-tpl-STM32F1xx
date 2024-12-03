@@ -57,8 +57,8 @@ namespace STM32
         class Channel
         {
         private:
-            static TransferCallbackT _transferCallback;
-            static ErrorCallbackT _errorCallback;
+            static inline TransferCallbackT _transferCallback;
+            static inline ErrorCallbackT _errorCallback;
 
             static constexpr DMA_Channel_TypeDef *_regs()
             {
