@@ -50,8 +50,8 @@ namespace STM32
             ERROR,
         };
 
-        typedef void (*TransferCallbackT)();
-        typedef void (*ErrorCallbackT)();
+        using TransferCallbackT = std::add_pointer_t<void()>;// TODO use from common
+        using ErrorCallbackT = std::add_pointer_t<void()>;
 
         template <class tDriver, uint32_t tRegsAddress, IRQn_Type tEventIRQn, uint8_t tChannel>
         class Channel
@@ -185,22 +185,38 @@ namespace STM32
 
 // F10x only for now
 #if defined(DMA1_BASE)
-    using DMA1_Driver = DMA::Driver<DMA1_BASE, Clock::ClockControl<&RCC_TypeDef::AHBENR, RCC_AHBENR_DMA1EN>>;
-    using DMA1_Channel_1 = DMA::Channel<DMA1_Driver, DMA1_Channel1_BASE, DMA1_Channel1_IRQn, 1>;
-    using DMA1_Channel_2 = DMA::Channel<DMA1_Driver, DMA1_Channel2_BASE, DMA1_Channel2_IRQn, 2>;
-    using DMA1_Channel_3 = DMA::Channel<DMA1_Driver, DMA1_Channel3_BASE, DMA1_Channel3_IRQn, 3>;
-    using DMA1_Channel_4 = DMA::Channel<DMA1_Driver, DMA1_Channel4_BASE, DMA1_Channel4_IRQn, 4>;
-    using DMA1_Channel_5 = DMA::Channel<DMA1_Driver, DMA1_Channel5_BASE, DMA1_Channel5_IRQn, 5>;
-    using DMA1_Channel_6 = DMA::Channel<DMA1_Driver, DMA1_Channel6_BASE, DMA1_Channel6_IRQn, 6>;
-    using DMA1_Channel_7 = DMA::Channel<DMA1_Driver, DMA1_Channel7_BASE, DMA1_Channel7_IRQn, 7>;
+#undef DMA1
+    using DMA1 = DMA::Driver<DMA1_BASE, Clock::ClockControl<&RCC_TypeDef::AHBENR, RCC_AHBENR_DMA1EN>>;
+
+#undef DMA1_Channel1
+#undef DMA1_Channel2
+#undef DMA1_Channel3
+#undef DMA1_Channel4
+#undef DMA1_Channel5
+#undef DMA1_Channel6
+#undef DMA1_Channel7
+    using DMA1_Channel1 = DMA::Channel<DMA1, DMA1_Channel1_BASE, DMA1_Channel1_IRQn, 1>;
+    using DMA1_Channel2 = DMA::Channel<DMA1, DMA1_Channel2_BASE, DMA1_Channel2_IRQn, 2>;
+    using DMA1_Channel3 = DMA::Channel<DMA1, DMA1_Channel3_BASE, DMA1_Channel3_IRQn, 3>;
+    using DMA1_Channel4 = DMA::Channel<DMA1, DMA1_Channel4_BASE, DMA1_Channel4_IRQn, 4>;
+    using DMA1_Channel5 = DMA::Channel<DMA1, DMA1_Channel5_BASE, DMA1_Channel5_IRQn, 5>;
+    using DMA1_Channel6 = DMA::Channel<DMA1, DMA1_Channel6_BASE, DMA1_Channel6_IRQn, 6>;
+    using DMA1_Channel7 = DMA::Channel<DMA1, DMA1_Channel7_BASE, DMA1_Channel7_IRQn, 7>;
 #endif
 #if defined(DMA2_BASE)
-    using DMA2_Driver = DMA::Driver<DMA2_BASE, Clock::ClockControl<&RCC_TypeDef::AHBENR, RCC_AHBENR_DMA2EN>>;
-    using DMA2_Channel_1 = DMA::Channel<DMA2_Driver, DMA2_Channel1_BASE, DMA2_Channel1_IRQn, 1>;
-    using DMA2_Channel_2 = DMA::Channel<DMA2_Driver, DMA2_Channel2_BASE, DMA2_Channel2_IRQn, 2>;
-    using DMA2_Channel_3 = DMA::Channel<DMA2_Driver, DMA2_Channel3_BASE, DMA2_Channel3_IRQn, 3>;
-    using DMA2_Channel_4 = DMA::Channel<DMA2_Driver, DMA2_Channel4_BASE, DMA2_Channel4_IRQn, 4>;
-    using DMA2_Channel_5 = DMA::Channel<DMA2_Driver, DMA2_Channel5_BASE, DMA2_Channel5_IRQn, 5>;
+#undef DMA2
+    using DMA2 = DMA::Driver<DMA2_BASE, Clock::ClockControl<&RCC_TypeDef::AHBENR, RCC_AHBENR_DMA2EN>>;
+
+#undef DMA2_Channel1
+#undef DMA2_Channel2
+#undef DMA2_Channel3
+#undef DMA2_Channel4
+#undef DMA2_Channel5
+    using DMA2_Channel1 = DMA::Channel<DMA2, DMA2_Channel1_BASE, DMA2_Channel1_IRQn, 1>;
+    using DMA2_Channel2 = DMA::Channel<DMA2, DMA2_Channel2_BASE, DMA2_Channel2_IRQn, 2>;
+    using DMA2_Channel3 = DMA::Channel<DMA2, DMA2_Channel3_BASE, DMA2_Channel3_IRQn, 3>;
+    using DMA2_Channel4 = DMA::Channel<DMA2, DMA2_Channel4_BASE, DMA2_Channel4_IRQn, 4>;
+    using DMA2_Channel5 = DMA::Channel<DMA2, DMA2_Channel5_BASE, DMA2_Channel5_IRQn, 5>;
 #endif
 }
 

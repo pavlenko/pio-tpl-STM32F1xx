@@ -39,6 +39,17 @@
 #error "STM32YYxx chip series is not defined"
 #endif
 
+#include <type_traits>
+
+enum class Transfer
+{
+    SYNC,
+    IRQ,
+    DMA,
+};
+
+using TransferCallback = std::add_pointer_t<void()>;
+
 enum class Result
 {
     OK,
