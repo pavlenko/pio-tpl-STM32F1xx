@@ -56,7 +56,6 @@ namespace STM32::UARTex
     class Driver
     {
     private:
-        static inline State m_state;
         static inline bool m_busyTX;
         static inline bool m_busyRX;
         static constexpr USART_TypeDef *regs() { return reinterpret_cast<USART_TypeDef *>(RegsT); }
@@ -64,7 +63,7 @@ namespace STM32::UARTex
     public:
         static inline void enable();
         static inline void disable();
-        static inline void configure(uint32_t baud, Config2 config);
+        static inline void configure(uint32_t baud, const Config2 config = Config2());
         static inline void sendDMA(void *data, uint16_t size);
         static inline void recvDMA(void *data, uint16_t size);
         static inline bool busyTX();
@@ -79,13 +78,41 @@ namespace STM32::UARTex
     };
 
     UART_TPL_ARGUMENTS
-    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(uint32_t baud, Config2 config)
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(uint32_t baud, const Config2 config)
     {
-        // set all registers from zero(?)
-        // CR1: dataBits, parity, enable rx/tx/both, oversampling (if has)
-        // CR2: stop bits
-        // CR3: HW control
-        // BRR: baud calculation
+        static constexpr const uint32_t mode = static_cast<uint32_t>(config.mode);
+        static constexpr const uint32_t dataBits = static_cast<uint32_t>(config.dataBits);
+        static constexpr const uint32_t stopBits = static_cast<uint32_t>(config.stopBits);
+        static constexpr const uint32_t parity = static_cast<uint32_t>(config.parity);
+        static constexpr const uint32_t hwControl = static_cast<uint32_t>(config.hwControl);
+        static constexpr const uint32_t oversampling = static_cast<uint32_t>(config.oversampling);
+
+        uint32_t pclk;
+        if constexpr (RegsT == USART1_BASE)
+        {
+            pclk = HAL_RCC_GetPCLK2Freq();
+        }
+        else
+        {
+            pclk = HAL_RCC_GetPCLK1Freq();
+        }
+
+#if defined(USART_CR1_OVER8)
+        if constexpr (oversampling == Oversampling::_8BIT)
+        {
+            regs()->BRR = UART_BRR_SAMPLING8(pclk, baud);
+        }
+        else
+        {
+            regs()->BRR = UART_BRR_SAMPLING16(pclk, baud);
+        }
+#else
+        regs()->BRR = UART_BRR_SAMPLING16(pclk, baud);
+#endif /* USART_CR1_OVER8 */
+
+        regs()->CR1 = mode | dataBits | parity | oversampling;
+        regs()->CR2 = stopBits;
+        regs()->CR3 = hwControl;
     }
 
     UART_TPL_ARGUMENTS
@@ -184,7 +211,7 @@ namespace STM32::UARTex
     {
         regs()->CR3 &= ~USART_CR3_DMAT;
         DMAtxT::abort();
-        m_busyTX = true;
+        m_busyTX = false;
     }
 
     UART_TPL_ARGUMENTS
@@ -193,6 +220,6 @@ namespace STM32::UARTex
         regs()->CR1 &= ~USART_CR1_IDLEIE;
         regs()->CR3 &= ~USART_CR3_DMAR;
         DMArxT::abort();
-        m_busyRX = true;
+        m_busyRX = false;
     }
 }
