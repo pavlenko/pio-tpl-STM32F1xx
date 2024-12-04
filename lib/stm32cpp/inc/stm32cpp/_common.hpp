@@ -48,7 +48,7 @@ enum class Transfer
     DMA,
 };
 
-using TransferCallback = std::add_pointer_t<void()>;
+using TransferCallback = std::add_pointer_t<void(void* data, size_t size, bool success)>;
 
 enum class Result
 {

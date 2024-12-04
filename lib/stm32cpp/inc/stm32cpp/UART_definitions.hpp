@@ -151,6 +151,14 @@ namespace STM32::UART
         {
         }
     };
+
+    struct Data
+    {
+        uint8_t *buf;
+        uint16_t len;
+        uint16_t cnt;
+        TransferCallback cb;
+    };
 }
 
 #endif // __STM32_UART_DEFINITIONS_H__

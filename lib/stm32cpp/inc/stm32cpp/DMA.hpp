@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stm32cpp/_common.hpp>
 #include <stm32cpp/Clock.hpp>
+#include <stm32cpp/DMA_definitions.hpp>
 
 // F0, F1, F3, G0, G4, L1, L4 - channel; IRQn {GLOBAL, TC, HT, TE}
 // F2, F4, F7 - stream; IRQn {FIFO, reserved, DME, TE, HT, TC}
@@ -11,37 +12,6 @@ namespace STM32
 {
     namespace DMA
     {
-        enum class Config
-        {
-            // Direction
-            PER_2_MEM = 0x00000000u,
-            MEM_2_PER = DMA_CCR_DIR,
-            MEM_2_MEM = DMA_CCR_MEM2MEM,
-            // Circular mode
-            CIRCULAR = DMA_CCR_CIRC,
-            // Increments
-            PINC = DMA_CCR_PINC,
-            MINC = DMA_CCR_MINC,
-            // Periph data size
-            PSIZE_8BIT = 0x00000000u,
-            PSIZE_16BIT = DMA_CCR_PSIZE_0,
-            PSIZE_32BIT = DMA_CCR_PSIZE_1,
-            // Memory data size
-            MSIZE_8BIT = 0x00000000u,
-            MSIZE_16BIT = DMA_CCR_MSIZE_0,
-            MSIZE_32BIT = DMA_CCR_MSIZE_1,
-            // Priority
-            PRIORITY_LOW = 0x00000000u,
-            PRIORITY_MEDIUM = DMA_CCR_PL_0,
-            PRIORITY_HIGH = DMA_CCR_PL_1,
-            PRIORITY_VERY_HIGH = DMA_CCR_PL,
-        };
-
-        inline constexpr Config operator|(Config lft, Config rgt)
-        {
-            return Config(static_cast<uint32_t>(lft) | static_cast<uint32_t>(rgt));
-        }
-
         enum class Flag
         {
             GLOBAL,
@@ -56,15 +26,33 @@ namespace STM32
         class Channel
         {
         private:
-            static inline TransferCallback _transferCallback;
-            static inline ErrorCallbackT _errorCallback;
-
+            static inline Data data;
             static constexpr DMA_Channel_TypeDef *_regs()
             {
                 return reinterpret_cast<DMA_Channel_TypeDef *>(tRegsAddress);
             }
 
         public:
+            static inline void enable()
+            {
+#ifdef DMA_CCR_EN
+                _regs()->CCR |= DMA_CCR_EN;
+#endif
+#ifdef DMA_SxCR_EN
+                _regs()->CR |= DMA_SxCR_EN;
+#endif
+            }
+            static inline void disable()
+            {
+#ifdef DMA_CCR_EN
+                _regs()->CCR &= ~DMA_CCR_EN;
+#endif
+#ifdef DMA_SxCR_EN
+                _regs()->CR &= ~DMA_SxCR_EN;
+#endif
+            }
+
+            // TODO move flags manipulation to dispatch irq method
             template <Flag tFlag>
             static inline bool getFlag()
             {
@@ -89,31 +77,49 @@ namespace STM32
 
             static inline void setTransferCallback(TransferCallback cb)
             {
-                _transferCallback = cb;
-            }
-
-            static inline void setErrorCallback(ErrorCallbackT cb)
-            {
-                _errorCallback = cb;
+                data.callback = cb;
             }
 
             static inline void transfer(Config config, const void *buffer, volatile void *periph, uint16_t len)
             {
                 tDriver::enable();
 
-                _regs()->CCR = 0x00000000u;
-
+#ifdef DMA_CCR_EN
+                _regs()->CCR = 0;
                 _regs()->CNDTR = len;
                 _regs()->CMAR = reinterpret_cast<uint32_t>(buffer);
                 _regs()->CPAR = reinterpret_cast<uint32_t>(periph);
+#endif
+#ifdef DMA_SxCR_EN
+                _regs()->CR = 0;
+                _regs()->NDTR = len;
+                _regs()->M0AR = reinterpret_cast<uint32_t>(buffer);
+                _regs()->PAR = reinterpret_cast<uint32_t>(periph);
+#endif
+                data.data = buffer;
+                data.size = len;
+
+                if (data.callback)
+                    config = config | Config::IRQ_TRANSFER_COMPLETE | Config::IRQ_TRANSFER_ERROR;
 
                 NVIC_EnableIRQ(tEventIRQn);
-                _regs()->CCR = static_cast<uint32_t>(config) | DMA_CCR_EN | DMA_CCR_TEIE | DMA_CCR_TCIE;
+
+#ifdef DMA_CCR_EN
+                _regs()->CCR = static_cast<uint32_t>(config) | DMA_CCR_EN;
+#endif
+#ifdef DMA_SxCR_EN
+                _regs()->CR = static_cast<uint32_t>(config) | DMA_SxCR_EN;
+#endif
             }
 
             static inline uint16_t getRemaining()
             {
+#ifdef DMA_CCR_EN
                 return _regs()->CNDTR;
+#endif
+#ifdef DMA_SxCR_EN
+                return _regs()->NDTR;
+#endif
             }
 
             static inline void abort()
@@ -123,9 +129,19 @@ namespace STM32
                 clrFlags();
             }
 
+            static inline bool isEnabled()
+            {
+#ifdef DMA_CCR_EN
+                return (_regs()->CCR & DMA_CCR_EN) != 0u;
+#endif
+#ifdef DMA_SxCR_EN
+                return (_regs()->CR & DMA_SxCR_EN) != 0u;
+#endif
+            }
+
             static inline bool isReady()
             {
-                return _regs()->CNDTR == 0 || (_regs()->CCR & DMA_CCR_EN) == 0u;
+                return getRemaining() == 0 || !isEnabled();
             }
 
             static inline void dispatchIRQ()
@@ -133,16 +149,14 @@ namespace STM32
                 if ((_regs()->CCR & DMA_CCR_TCIE) != 0u && getFlag<Flag::TRANSFER_COMPLETE>())
                 {
                     clrFlag<Flag::TRANSFER_COMPLETE>();
-                    if (_transferCallback)
-                        _transferCallback();
+                    data.notify(true);
                 }
 
                 if ((_regs()->CCR & DMA_CCR_TEIE) != 0u && getFlag<Flag::ERROR>())
                 {
                     _regs()->CCR &= ~(DMA_CCR_TEIE | DMA_CCR_HTIE | DMA_CCR_TCIE);
                     clrFlags();
-                    if (_errorCallback)
-                        _errorCallback();
+                    data.notify(false);
                 }
             }
         };

@@ -143,7 +143,7 @@ namespace STM32::UARTex
 
         regs()->CR3 |= USART_CR3_DMAT;
 
-        DMAtxT::setTransferCallback(endTX);
+        DMAtxT::setTransferCallback(endTX);//TODO fix callback signature
         DMAtxT::transfer(DMA::Config::MEM_2_PER | DMA::Config::MINC, data, &regs()->REG_TX_DATA, size);
     }
 
