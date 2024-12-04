@@ -32,7 +32,6 @@ namespace STM32::UARTex
 
     struct Config
     {
-        ////...
     };
 
     // to defs
@@ -61,14 +60,15 @@ namespace STM32::UARTex
     class Driver
     {
     private:
-        static inline State txState;
-        static inline State rxState;
+        static inline State m_state;
+        static inline bool m_busyTX;
+        static inline bool m_busyRX;
         static constexpr USART_TypeDef *regs() { return reinterpret_cast<USART_TypeDef *>(RegsT); }
 
     public:
         static inline void enable();
         static inline void disable();
-        static inline void configure(Config config);
+        static inline void configure(uint32_t baud, Config config);
         static inline void sendDMA(void *data, uint16_t size);
         static inline void recvDMA(void *data, uint16_t size);
         static inline bool busyTX();
@@ -83,7 +83,7 @@ namespace STM32::UARTex
     };
 
     UART_TPL_ARGUMENTS
-    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(Config config)
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(uint32_t baud, Config config)
     {
         // set all registers from zero(?)
         // CR1: dataBits, parity, enable rx/tx/both, oversampling (if has)
@@ -114,7 +114,7 @@ namespace STM32::UARTex
         while (busyTX())
             asm("nop");
 
-        txState = State::BUSY;
+        m_busyTX = true;
 
         DMAtxT::clrFlagTC();
 
@@ -130,7 +130,7 @@ namespace STM32::UARTex
         while (busyRX())
             asm("nop");
 
-        rxState = State::BUSY;
+        m_busyRX = true;
 
         DMArxT::clrFlagTC();
 
@@ -144,13 +144,13 @@ namespace STM32::UARTex
     UART_TPL_ARGUMENTS
     bool Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::busyTX()
     {
-        return State::BUSY == txState;
+        return m_busyTX;
     }
 
     UART_TPL_ARGUMENTS
     bool Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::busyRX()
     {
-        return State::BUSY == rxState;
+        return m_busyRX;
     }
 
     UART_TPL_ARGUMENTS
@@ -188,7 +188,7 @@ namespace STM32::UARTex
     {
         regs()->CR3 &= ~USART_CR3_DMAT;
         DMAtxT::abort();
-        txState = State::READY;
+        m_busyTX = true;
     }
 
     UART_TPL_ARGUMENTS
@@ -196,7 +196,7 @@ namespace STM32::UARTex
     {
         regs()->CR1 &= ~USART_CR1_IDLEIE;
         regs()->CR3 &= ~USART_CR3_DMAR;
-        DMAtxT::abort();
-        rxState = State::READY;
+        DMArxT::abort();
+        m_busyRX = true;
     }
 }
