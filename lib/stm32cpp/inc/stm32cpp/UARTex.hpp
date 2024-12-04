@@ -37,7 +37,7 @@ namespace STM32::UARTex
     // to defs
     // SR = F1
     // ISR = G0
-    enum IRQFlags
+    enum IRQFlags : uint32_t
     {
         NONE = 0,
 #ifdef USART_SR_PE
@@ -83,10 +83,9 @@ namespace STM32::UARTex
 #endif
         }
 
-        // enable UART, enable IRQ vector
-        static void enable();
-        // disable UART, disable IRQ vector
-        static void disable();
+        static inline void enable();
+        static inline void disable();
+
         // configure bus
         static void configure(Config config);
         static inline void sendDMA(void *data, uint16_t size);
@@ -94,7 +93,27 @@ namespace STM32::UARTex
         static inline bool busyTX();
         static inline bool busyRX();
         static inline void dispatchIRQ();
+
+    private:
+        static inline void endTX();
+        static inline void endRX();
     };
+
+    UART_TPL_ARGUMENTS
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::enable()
+    {
+        ClockT::enable();
+        NVIC_EnableIRQ(IRQnT);
+        regs()->CR1 |= USART_CR1_UE;
+    }
+
+    UART_TPL_ARGUMENTS
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::disable()
+    {
+        ClockT::disable();
+        NVIC_DisableIRQ(IRQnT);
+        regs()->CR1 &= ~USART_CR1_UE;
+    }
 
     UART_TPL_ARGUMENTS
     void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::sendDMA(void *data, uint16_t size)
@@ -106,11 +125,9 @@ namespace STM32::UARTex
 
         DMAtxT::clrFlagTC();
 
-        regs()->CR1 |= USART_CR1_TCIE;
         regs()->CR3 |= USART_CR3_DMAT;
 
-        DMAtxT::setTransferCallback([]()
-                                    { txState = State::READY; });
+        DMAtxT::setTransferCallback(endTX);
         DMAtxT::transfer(DMA::Config::MEM_2_PER | DMA::Config::MINC, data, &regs()->DR, size);
     }
 
@@ -124,11 +141,10 @@ namespace STM32::UARTex
 
         DMArxT::clrFlagTC();
 
-        regs()->CR1 |= USART_CR1_IDLEIE | USART_CR1_PEIE;
-        regs()->CR3 |= USART_CR3_DMAR | USART_CR3_EIE;
+        regs()->CR1 |= USART_CR1_IDLEIE;
+        regs()->CR3 |= USART_CR3_DMAR;
 
-        DMArxT::setTransferCallback([]()
-                                    { rxState = State::READY; });
+        DMArxT::setTransferCallback(endRX);
         DMArxT::transfer(DMA::Config::PER_2_MEM | DMA::Config::MINC, data, &regs()->DR, size);
     }
 
@@ -147,6 +163,27 @@ namespace STM32::UARTex
     UART_TPL_ARGUMENTS
     void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::dispatchIRQ()
     {
-        // all cases & notify upper layer
+        if (getIRQFlags() & IRQFlags::IDLE)
+        {
+            clrIRQFlags(IRQFlags::IDLE);
+            endRX();
+        }
+    }
+
+    UART_TPL_ARGUMENTS
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::endTX()
+    {
+        regs()->CR3 &= ~USART_CR3_DMAT;
+        DMAtxT::abort();
+        txState = State::READY;
+    }
+
+    UART_TPL_ARGUMENTS
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::endRX()
+    {
+        regs()->CR1 &= ~USART_CR1_IDLEIE;
+        regs()->CR3 &= ~USART_CR3_DMAR;
+        DMAtxT::abort();
+        rxState = State::READY;
     }
 }
