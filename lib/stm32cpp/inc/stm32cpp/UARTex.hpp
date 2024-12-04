@@ -32,6 +32,7 @@ namespace STM32::UARTex
 
     struct Config
     {
+        ////...
     };
 
     // to defs
@@ -65,39 +66,31 @@ namespace STM32::UARTex
         static constexpr USART_TypeDef *regs() { return reinterpret_cast<USART_TypeDef *>(RegsT); }
 
     public:
-        static inline IRQFlags getIRQFlags()
-        {
-#ifdef USART_SR_PE
-            return static_cast<IRQFlags>(regs()->SR & IRQFlags::ALL);
-#else
-            return static_cast<IRQFlags>(regs()->ISR & IRQFlags::ALL);
-#endif
-        }
-
-        static inline void clrIRQFlags(IRQFlags flags)
-        {
-#ifdef USART_SR_PE
-            regs()->SR &= ~flags;
-#else
-            regs()->ICR = flags;
-#endif
-        }
-
         static inline void enable();
         static inline void disable();
-
-        // configure bus
-        static void configure(Config config);
+        static inline void configure(Config config);
         static inline void sendDMA(void *data, uint16_t size);
         static inline void recvDMA(void *data, uint16_t size);
         static inline bool busyTX();
         static inline bool busyRX();
+        static inline IRQFlags getIRQFlags();
+        static inline void clrIRQFlags(IRQFlags flags);
         static inline void dispatchIRQ();
 
     private:
         static inline void endTX();
         static inline void endRX();
     };
+
+    UART_TPL_ARGUMENTS
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(Config config)
+    {
+        // set all registers from zero(?)
+        // CR1: dataBits, parity, enable rx/tx/both, oversampling (if has)
+        // CR2: stop bits
+        // CR3: HW control
+        // BRR: baud calculation
+    }
 
     UART_TPL_ARGUMENTS
     void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::enable()
@@ -128,7 +121,7 @@ namespace STM32::UARTex
         regs()->CR3 |= USART_CR3_DMAT;
 
         DMAtxT::setTransferCallback(endTX);
-        DMAtxT::transfer(DMA::Config::MEM_2_PER | DMA::Config::MINC, data, &regs()->DR, size);
+        DMAtxT::transfer(DMA::Config::MEM_2_PER | DMA::Config::MINC, data, &regs()->REG_TX_DATA, size);
     }
 
     UART_TPL_ARGUMENTS
@@ -145,7 +138,7 @@ namespace STM32::UARTex
         regs()->CR3 |= USART_CR3_DMAR;
 
         DMArxT::setTransferCallback(endRX);
-        DMArxT::transfer(DMA::Config::PER_2_MEM | DMA::Config::MINC, data, &regs()->DR, size);
+        DMArxT::transfer(DMA::Config::PER_2_MEM | DMA::Config::MINC, data, &regs()->REG_RX_DATA, size);
     }
 
     UART_TPL_ARGUMENTS
@@ -158,6 +151,26 @@ namespace STM32::UARTex
     bool Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::busyRX()
     {
         return State::BUSY == rxState;
+    }
+
+    UART_TPL_ARGUMENTS
+    IRQFlags Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::getIRQFlags()
+    {
+#ifdef USART_SR_PE
+        return static_cast<IRQFlags>(regs()->SR & IRQFlags::ALL);
+#else
+        return static_cast<IRQFlags>(regs()->ISR & IRQFlags::ALL);
+#endif
+    }
+
+    UART_TPL_ARGUMENTS
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::clrIRQFlags(IRQFlags flags)
+    {
+#ifdef USART_SR_PE
+        regs()->SR &= ~flags;
+#else
+        regs()->ICR = flags;
+#endif
     }
 
     UART_TPL_ARGUMENTS
