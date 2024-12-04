@@ -18,25 +18,6 @@ namespace STM32
 {
     namespace UART
     {
-        template <
-            Mode tMode,
-            uint32_t tBaudRate,
-            DataBits tDataBits,
-            StopBits tStopBits,
-            Parity tParity,
-            HWControl tHWControl = HWControl::NONE,
-            Oversampling tOversampling = Oversampling::_16BIT>
-        struct Config
-        {
-            static constexpr auto mode = tMode;
-            static constexpr auto baudRate = tBaudRate;
-            static constexpr auto dataBits = tDataBits;
-            static constexpr auto stopBits = tStopBits;
-            static constexpr auto parity = tParity;
-            static constexpr auto hwControl = tHWControl;
-            static constexpr auto oversampling = tOversampling;
-        };
-
         namespace
         {
             struct _Data

@@ -30,10 +30,6 @@ namespace STM32::UARTex
 
 #endif
 
-    struct Config
-    {
-    };
-
     // to defs
     // SR = F1
     // ISR = G0
@@ -68,7 +64,7 @@ namespace STM32::UARTex
     public:
         static inline void enable();
         static inline void disable();
-        static inline void configure(uint32_t baud, Config config);
+        static inline void configure(uint32_t baud, Config2 config);
         static inline void sendDMA(void *data, uint16_t size);
         static inline void recvDMA(void *data, uint16_t size);
         static inline bool busyTX();
@@ -83,7 +79,7 @@ namespace STM32::UARTex
     };
 
     UART_TPL_ARGUMENTS
-    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(uint32_t baud, Config config)
+    void Driver<RegsT, IRQnT, ClockT, DMAtxT, DMArxT>::configure(uint32_t baud, Config2 config)
     {
         // set all registers from zero(?)
         // CR1: dataBits, parity, enable rx/tx/both, oversampling (if has)
