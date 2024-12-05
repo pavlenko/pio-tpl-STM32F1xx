@@ -52,29 +52,6 @@ namespace STM32
 #endif
             }
 
-            // TODO move flags manipulation to dispatch irq method
-            template <Flag tFlag>
-            static inline bool getFlag()
-            {
-                return tDriver::template getChannelFlag<tChannel, tFlag>();
-            }
-
-            template <Flag tFlag>
-            static inline void clrFlag()
-            {
-                tDriver::template clrChannelFlag<tChannel, tFlag>();
-            }
-
-            static inline void clrFlagTC()
-            {
-                tDriver::template clrChannelFlag<tChannel, Flag::TRANSFER_COMPLETE>();
-            }
-
-            static inline void clrFlags()
-            {
-                tDriver::template clrChannelFlags<tChannel>();
-            }
-
             static inline void setTransferCallback(TransferCallback cb)
             {
                 data.callback = cb;
@@ -96,7 +73,7 @@ namespace STM32
                 _regs()->M0AR = reinterpret_cast<uint32_t>(buffer);
                 _regs()->PAR = reinterpret_cast<uint32_t>(periph);
 #endif
-                data.data = buffer;
+                data.data = const_cast<void*>(buffer);
                 data.size = len;
 
                 if (data.callback)
@@ -124,8 +101,13 @@ namespace STM32
 
             static inline void abort()
             {
-                _regs()->CCR &= ~(DMA_CCR_TEIE | DMA_CCR_HTIE | DMA_CCR_TCIE);
-                _regs()->CCR &= ~(DMA_CCR_EN);
+#ifdef DMA_CCR_EN
+                _regs()->CCR &= ~static_cast<uint32_t>(Config::IRQ_TRANSFER_COMPLETE | Config::IRQ_TRANSFER_ERROR);
+#endif
+#ifdef DMA_SxCR_EN
+                _regs()->CR &= ~static_cast<uint32_t>(Config::IRQ_TRANSFER_COMPLETE | Config::IRQ_TRANSFER_ERROR);
+#endif
+                disable();
                 clrFlags();
             }
 
@@ -144,17 +126,38 @@ namespace STM32
                 return getRemaining() == 0 || !isEnabled();
             }
 
+            template <Flag tFlag>
+            static inline bool getFlag()
+            {
+                return tDriver::template getChannelFlag<tChannel, tFlag>();
+            }
+
+            template <Flag tFlag>
+            static inline void clrFlag()
+            {
+                tDriver::template clrChannelFlag<tChannel, tFlag>();
+            }
+
+            static inline void clrFlagTC()
+            {
+                tDriver::template clrChannelFlag<tChannel, Flag::TRANSFER_COMPLETE>();
+            }
+
+            static inline void clrFlags()
+            {
+                tDriver::template clrChannelFlags<tChannel>();
+            }
+
             static inline void dispatchIRQ()
             {
-                if ((_regs()->CCR & DMA_CCR_TCIE) != 0u && getFlag<Flag::TRANSFER_COMPLETE>())
+                if (getFlag<Flag::TRANSFER_COMPLETE>())
                 {
                     clrFlag<Flag::TRANSFER_COMPLETE>();
-                    data.notify(true);
+                    data.notify(true);//TODO <-- pass remaining counter, for check if full success...
                 }
 
-                if ((_regs()->CCR & DMA_CCR_TEIE) != 0u && getFlag<Flag::ERROR>())
+                if (getFlag<Flag::ERROR>())
                 {
-                    _regs()->CCR &= ~(DMA_CCR_TEIE | DMA_CCR_HTIE | DMA_CCR_TCIE);
                     clrFlags();
                     data.notify(false);
                 }

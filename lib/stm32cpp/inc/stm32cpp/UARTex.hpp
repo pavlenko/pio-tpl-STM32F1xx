@@ -139,11 +139,12 @@ namespace STM32::UARTex
 
         m_busyTX = true;
 
-        DMAtxT::clrFlagTC();
+        DMArxT::template clrFlag<DMA::Flag::TRANSFER_COMPLETE>();
 
         regs()->CR3 |= USART_CR3_DMAT;
 
-        DMAtxT::setTransferCallback(endTX);//TODO fix callback signature
+        //TODO find a way for callback???, need to receive count instead of full len
+        DMAtxT::setTransferCallback([](void *, size_t, bool) {});
         DMAtxT::transfer(DMA::Config::MEM_2_PER | DMA::Config::MINC, data, &regs()->REG_TX_DATA, size);
     }
 
@@ -155,7 +156,7 @@ namespace STM32::UARTex
 
         m_busyRX = true;
 
-        DMArxT::clrFlagTC();
+        DMArxT::template clrFlag<DMA::Flag::TRANSFER_COMPLETE>();
 
         regs()->CR1 |= USART_CR1_IDLEIE;
         regs()->CR3 |= USART_CR3_DMAR;
