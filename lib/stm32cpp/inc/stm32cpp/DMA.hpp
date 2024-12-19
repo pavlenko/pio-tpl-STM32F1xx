@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stm32cpp/_common.hpp>
 #include <stm32cpp/Clock.hpp>
-#include <stm32cpp/DMA_definitions.hpp>
+#include <stm32cpp/common/DMA_definitions.hpp>
 
 // F0, F1, F3, G0, G4, L1, L4 - channel; IRQn {GLOBAL, TC, HT, TE}
 // F2, F4, F7 - stream; IRQn {FIFO, reserved, DME, TE, HT, TC}
@@ -12,14 +12,6 @@ namespace STM32
 {
     namespace DMA
     {
-        enum class Flag
-        {
-            GLOBAL,
-            TRANSFER_COMPLETE,
-            HALF_TRANSFER,
-            ERROR,
-        };
-
         using ErrorCallbackT = std::add_pointer_t<void()>;
 
         template <class tDriver, uint32_t tRegsAddress, IRQn_Type tEventIRQn, uint8_t tChannel>
