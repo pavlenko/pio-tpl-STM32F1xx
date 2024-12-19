@@ -148,7 +148,7 @@ namespace STM32
                     data.notify(true);//TODO <-- pass remaining counter, for check if full success...
                 }
 
-                if (getFlag<Flag::ERROR>())
+                if (getFlag<Flag::TRANSFER_ERROR>())
                 {
                     clrFlags();
                     data.notify(false);
