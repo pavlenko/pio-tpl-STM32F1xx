@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stm32/_cmsis.hpp>
 
 namespace STM32::Clock
 {
@@ -10,6 +11,8 @@ namespace STM32::Clock
     class ClockBase
     {
     protected:
+        static const uint32_t m_timeout = 4000;
+
         /**
          * @brief Base enable clock logic
          *
@@ -19,7 +22,7 @@ namespace STM32::Clock
          * @return true
          * @return false
          */
-        template <uint32_t tRegAddr, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
+        template <volatile uint32_t RCC_TypeDef::*tReg, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
         static inline bool enable();
 
         /**
@@ -31,7 +34,7 @@ namespace STM32::Clock
          * @return true
          * @return false
          */
-        template <uint32_t tRegAddr, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
+        template <volatile uint32_t RCC_TypeDef::*tReg, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
         static inline bool disable();
     };
 
@@ -348,4 +351,48 @@ namespace STM32::Clock
          */
         static inline uint32_t getFrequency();
     };
+
+    template <volatile uint32_t RCC_TypeDef::*tReg, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
+    bool ClockBase::enable()
+    {
+        reinterpret_cast<RCC_TypeDef *>(RCC_BASE)->*tReg |= tTurnMask;
+        if constexpr (tWaitMask != 0u)
+        {
+            uint32_t counter{0};
+            while ((reinterpret_cast<RCC_TypeDef *>(RCC_BASE)->*tReg & tWaitMask) == 0u && counter < m_timeout)
+                counter++;
+
+            return (reinterpret_cast<RCC_TypeDef *>(RCC_BASE)->*tReg & tWaitMask) != 0u;
+        } else {
+            return true;
+        }
+    }
+
+    template <volatile uint32_t RCC_TypeDef::*tReg, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
+    bool ClockBase::disable()
+    {
+        reinterpret_cast<RCC_TypeDef *>(RCC_BASE)->*tReg &= ~tTurnMask;
+        if constexpr (tWaitMask != 0u)
+        {
+            uint32_t counter{0};
+            while ((reinterpret_cast<RCC_TypeDef *>(RCC_BASE)->*tReg & tWaitMask) != 0u && counter < m_timeout)
+                counter++;
+
+            return (reinterpret_cast<RCC_TypeDef *>(RCC_BASE)->*tReg & tWaitMask) == 0u;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    uint32_t LSIClock::getFrequency()
+    {
+        return LSI_VALUE;
+    }
+
+    uint32_t LSEClock::getFrequency()
+    {
+        return LSE_VALUE;
+    }
 }
