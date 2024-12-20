@@ -395,4 +395,14 @@ namespace STM32::Clock
     {
         return LSE_VALUE;
     }
+
+    uint32_t HSIClock::getFrequency()
+    {
+        return HSI_VALUE;
+    }
+
+    uint32_t HSEClock::getFrequency()
+    {
+        return HSE_VALUE;
+    }
 }
