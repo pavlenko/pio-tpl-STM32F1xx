@@ -260,12 +260,27 @@ namespace STM32::Clock
          */
         template <Source source>
         static inline void selectSource();
+
+        template <uint32_t divider>
+        static inline void setDivider();
+
+        template <uint32_t multiplier>
+        static inline void setMultiplier();
+
+        template <uint32_t divider>
+        static inline void setSysOutputDivider();
+
+        template <uint32_t divider>
+        static inline void setUSBOutputDivider();
+
+        template <uint32_t divider>
+        static inline void setI2SOutputDivider();
     };
 
     /**
      * @brief Implements system clock
      */
-    class SYSClock
+    class SysClock
     {
     public:
         /**
