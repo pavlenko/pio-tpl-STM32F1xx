@@ -25,4 +25,34 @@ namespace STM32::Clock
         HSI,
         HSE,
     };
+
+    bool PLLClock::on() { ClockBase::enable<&RCC_TypeDef::CR, RCC_CR_PLLON, RCC_CR_PLLRDY>(); }
+
+    bool PLLClock::off() { ClockBase::disable<&RCC_TypeDef::CR, RCC_CR_PLLON, RCC_CR_PLLRDY>(); }
+
+    template <uint32_t divider>
+    void PLLClock::setDivider()
+    {
+#if defined(RCC_CFGR2_PREDIV1)
+        static_assert(divider <= 15, "Divider cannot be greater than 15!");
+        divider -= 1;
+        RCC->CFGR2 = ((RCC->CFGR2 & ~RCC_CFGR2_PREDIV1) | (divider << RCC_CFGR2_PREDIV1_Pos));
+#else
+        static_assert(1 <= divider && divider <= 15, "Divider can be equal 1 or 2!");
+        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | (divider == 2
+            ? RCC_CFGR_PLLXTPRE_HSE_DIV2
+            : RCC_CFGR_PLLXTPRE_HSE);
+#endif
+    }
+
+    template <uint32_t multiplier>
+    void PLLClock::setMultiplier()
+    {
+#if !(defined(RCC_CFGR_PLLMULL3) && defined(RCC_CFGR_PLLMULL10))
+        static_assert(4 <= multiplier && multiplier <= 9, "Multiplier can be equal 4..9!");
+#else
+        static_assert(4 <= multiplier && multiplier <= 9, "Multiplier cannot be greate than 16");
+#endif
+        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLMULL) | ((multiplier - 2) << RCC_CFGR_PLLMULL_Pos);
+    }
 }
