@@ -261,18 +261,43 @@ namespace STM32::Clock
         template <Source source>
         static inline void selectSource();
 
+        /**
+         * @brief Set PLL source divider (F4: pllm)
+         *
+         * @tparam divider
+         */
         template <uint32_t divider>
         static inline void setDivider();
 
+        /**
+         * @brief Set internal multiplier (F4: plln)
+         *
+         * @tparam multiplier
+         */
         template <uint32_t multiplier>
         static inline void setMultiplier();
 
+        /**
+         * @brief Set system clock divider (F4: pllp)
+         *
+         * @tparam divider
+         */
         template <uint32_t divider>
         static inline void setSysOutputDivider();
 
+        /**
+         * @brief Set USB (48MHz) divider (F4: pllq)
+         * 
+         * @tparam divider
+         */
         template <uint32_t divider>
         static inline void setUSBOutputDivider();
 
+        /**
+         * @brief Set I2S divider (F4: pllr)
+         *
+         * @tparam divider
+         */
         template <uint32_t divider>
         static inline void setI2SOutputDivider();
     };
