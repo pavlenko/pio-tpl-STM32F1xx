@@ -55,4 +55,11 @@ namespace STM32::Clock
 #endif
         RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLMULL) | ((multiplier - 2) << RCC_CFGR_PLLMULL_Pos);
     }
+
+    enum class SysClock::Source
+    {
+        HSI,
+        HSE,
+        PLL,
+    };
 }
