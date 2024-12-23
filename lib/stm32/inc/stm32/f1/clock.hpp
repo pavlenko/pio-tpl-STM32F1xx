@@ -76,13 +76,62 @@ namespace STM32::Clock
 
     class AHBClock : public BusClock<SysClock>
     {
-        // todo check reg bits used 
-        // & find simplier way to set it
+    public:
+        enum class Prescaler
+        {
+            DIV1 = RCC_CFGR_HPRE_DIV1,
+            DIV2 = RCC_CFGR_HPRE_DIV2,
+            DIV4 = RCC_CFGR_HPRE_DIV4,
+            DIV8 = RCC_CFGR_HPRE_DIV8,
+            DIV16 = RCC_CFGR_HPRE_DIV16,
+            DIV64 = RCC_CFGR_HPRE_DIV64,
+            DIV128 = RCC_CFGR_HPRE_DIV128,
+            DIV256 = RCC_CFGR_HPRE_DIV256,
+            DIV512 = RCC_CFGR_HPRE_DIV512,
+        };
+        
+        template <Prescaller Prescaller>
+        static inline void setPrescaller()
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_HPRE) | static_cast<uint32_t>(prescaller);
+        }
     };
 
     class APB1Clock : public BusClock<AHBClock>
-    {};
+    {
+    public:
+        enum class Prescaler
+        {
+            DIV1 = RCC_CFGR_PPRE1_DIV1,
+            DIV2 = RCC_CFGR_PPRE1_DIV2,
+            DIV4 = RCC_CFGR_PPRE1_DIV4,
+            DIV8 = RCC_CFGR_PPRE1_DIV8,
+            DIV16 = RCC_CFGR_PPRE1_DIV16,
+        };
+
+        template <Prescaller Prescaller>
+        static inline void setPrescaller()
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1) | static_cast<uint32_t>(prescaller);
+        }
+    };
 
     class APB2Clock : public BusClock<AHBClock>
-    {}
+    {
+    public:
+        enum class Prescaler
+        {
+            DIV1 = RCC_CFGR_PPRE2_DIV1,
+            DIV2 = RCC_CFGR_PPRE2_DIV2,
+            DIV4 = RCC_CFGR_PPRE2_DIV4,
+            DIV8 = RCC_CFGR_PPRE2_DIV8,
+            DIV16 = RCC_CFGR_PPRE2_DIV16,
+        };
+
+        template <Prescaller Prescaller>
+        static inline void setPrescaller()
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE2) | static_cast<uint32_t>(prescaller);
+        }
+    }
 }
