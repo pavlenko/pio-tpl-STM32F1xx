@@ -62,4 +62,16 @@ namespace STM32::Clock
         HSE,
         PLL,
     };
+
+    class AHBClock : public BusClock<SysClock>
+    {
+        // todo check reg bits used 
+        // & find simplier way to set it
+    };
+
+    class APB1Clock : public BusClock<AHBClock>
+    {};
+
+    class APB2Clock : public BusClock<AHBClock>
+    {}
 }
