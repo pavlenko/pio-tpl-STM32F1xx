@@ -30,6 +30,17 @@ namespace STM32::Clock
 
     bool PLLClock::off() { ClockBase::disable<&RCC_TypeDef::CR, RCC_CR_PLLON, RCC_CR_PLLRDY>(); }
 
+    template <PLLClock::Source source>
+    void PLLClock::selectSource()
+    {
+        if constexpr (source == PLLClock::Source::HSE)
+        {
+            RCC->CFGR |= RCC_CFGR_PLLSRC;
+        } else {
+            RCC->CFGR &= ~RCC_CFGR_PLLSRC;
+        }
+    }
+
     template <uint32_t divider>
     void PLLClock::setDivider()
     {
