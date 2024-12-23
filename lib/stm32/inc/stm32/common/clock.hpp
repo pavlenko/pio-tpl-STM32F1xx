@@ -384,12 +384,23 @@ namespace STM32::Clock
     class BusClock
     {
     public:
+        enum class Prescaller;
+
+    public:
         /**
          * @brief Get frequency, calculated depends on source
          *
          * @return Frequency in Hz
          */
         static inline uint32_t getFrequency();
+
+        /**
+         * @brief Set bus specific Prescaller
+         *
+         * @tparam prescaller
+         */
+        template <Prescaller Prescaller>
+        static inline void setPrescaller();
     };
 
     template <volatile uint32_t RCC_TypeDef::*tReg, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
