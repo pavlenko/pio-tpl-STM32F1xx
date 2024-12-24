@@ -74,6 +74,23 @@ namespace STM32::Clock
         PLL,
     };
 
+    template <SysClock::Source source>
+    void SysClock::selectSource()
+    {
+        if constexpr (source == SysClock::Source::HSI)
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
+        }
+        if constexpr (source == SysClock::Source::HSE)
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSE;
+        }
+        if constexpr (source == SysClock::Source::PLL)
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
+        }
+    }
+
     class AHBClock : public BusClock<SysClock>
     {
     public:
