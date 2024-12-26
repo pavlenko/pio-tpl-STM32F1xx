@@ -378,9 +378,8 @@ namespace STM32::Clock
      * @brief Base bus clock control
      *
      * @tparam tSourceClock
-     * @tparam tPrescaller
      */
-    template <typename tSourceClock, typename tPrescaller>
+    template <typename tSourceClock>
     class BusClock
     {
     public:
@@ -402,6 +401,28 @@ namespace STM32::Clock
         template <Prescaller Prescaller>
         static inline void setPrescaller();
     };
+
+    /**
+     * @brief Peripheral clock control
+     * 
+     * @tparam Source clock class
+     * @tparam Register address
+     * @tparam Enable bit mask
+     */
+    template <typename tSourceClock, uint32_t tReg, uint32_t tMask>
+    class ClockControl : public tSourceClock
+    {
+    public:
+        /**
+         * @brief Enable peripheral clock
+         */
+        static inline void enable();
+
+        /**
+         * @brief Disable peripheral clock
+         */
+        static inline void disable();
+    }
 
     template <volatile uint32_t RCC_TypeDef::*tReg, uint32_t tTurnMask, uint32_t tWaitMask = 0u>
     bool ClockBase::enable()
