@@ -106,21 +106,23 @@ namespace STM32::Clock
         uint32_t selectMask;
         uint32_t statusMask;
 
-        //TODO update sys clock here
         if constexpr (tSource == SysClock::Source::HSI)
         {
             selectMask = RCC_CFGR_SW_HSI;
             statusMask = RCC_CFGR_SWS_HSI;
+            SystemCoreClock = HSIClock::getFrequency();
         }
         else if constexpr (tSource == SysClock::Source::HSE)
         {
             selectMask = RCC_CFGR_SW_HSE;
             statusMask = RCC_CFGR_SWS_HSE;
+            SystemCoreClock = HSEClock::getFrequency();
         }
         else if constexpr (tSource == SysClock::Source::PLL)
         {
             selectMask = RCC_CFGR_SW_PLL;
             statusMask = RCC_CFGR_SWS_PLL;
+            SystemCoreClock = PLLClock::getFrequency();
         }
 
         uint32_t timeout = 10000;

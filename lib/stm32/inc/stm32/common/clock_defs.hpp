@@ -396,9 +396,9 @@ namespace STM32::Clock
         /**
          * @brief Set bus specific Prescaller
          *
-         * @tparam prescaller
+         * @tparam tPrescaller
          */
-        template <Prescaller Prescaller>
+        template <Prescaller tPrescaller>
         static inline void setPrescaller();
     };
 
