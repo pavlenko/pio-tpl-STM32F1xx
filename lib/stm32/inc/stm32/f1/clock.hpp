@@ -95,21 +95,39 @@ namespace STM32::Clock
         PLL,
     };
 
-    template <SysClock::Source source>
+    uint32_t SysClock::getFrequency()
+    {
+        return SystemCoreClock;
+    }
+
+    template <SysClock::Source tSource>
     void SysClock::selectSource()
     {
-        if constexpr (source == SysClock::Source::HSI)
+        uint32_t selectMask;
+        uint32_t statusMask;
+
+        //TODO update sys clock here
+        if constexpr (tSource == SysClock::Source::HSI)
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
+            selectMask = RCC_CFGR_SW_HSI;
+            statusMask = RCC_CFGR_SWS_HSI;
         }
-        else if constexpr (source == SysClock::Source::HSE)
+        else if constexpr (tSource == SysClock::Source::HSE)
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSE;
+            selectMask = RCC_CFGR_SW_HSE;
+            statusMask = RCC_CFGR_SWS_HSE;
         }
-        else if constexpr (source == SysClock::Source::PLL)
+        else if constexpr (tSource == SysClock::Source::PLL)
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
+            selectMask = RCC_CFGR_SW_PLL;
+            statusMask = RCC_CFGR_SWS_PLL;
         }
+
+        uint32_t timeout = 10000;
+        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | selectMask;
+
+        while (((RCC->CFGR & RCC_CFGR_SWS) != statusMask) && --timeout)
+            asm volatile ("nop");
     }
 
     class AHBClock : public BusClock<SysClock>

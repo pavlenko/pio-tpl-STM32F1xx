@@ -326,7 +326,7 @@ namespace STM32::Clock
          *
          * @tparam source
          */
-        template <Source source>
+        template <Source tSource>
         static inline void selectSource();
     };
 
