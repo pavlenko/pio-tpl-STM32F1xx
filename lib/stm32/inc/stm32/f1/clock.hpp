@@ -36,12 +36,14 @@ namespace STM32::Clock
         if constexpr (source == PLLClock::Source::HSE)
         {
             RCC->CFGR |= RCC_CFGR_PLLSRC;
-        } else {
+        }
+        else
+        {
             RCC->CFGR &= ~RCC_CFGR_PLLSRC;
         }
     }
 
-    template <uint32_t divider>
+    template <uint32_t tDivider>
     void PLLClock::setDivider()
     {
 #if defined(RCC_CFGR2_PREDIV1)
@@ -49,10 +51,10 @@ namespace STM32::Clock
         divider -= 1;
         RCC->CFGR2 = ((RCC->CFGR2 & ~RCC_CFGR2_PREDIV1) | (divider << RCC_CFGR2_PREDIV1_Pos));
 #else
-        static_assert(1 <= divider && divider <= 15, "Divider can be equal 1 or 2!");
-        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | (divider == 2
-            ? RCC_CFGR_PLLXTPRE_HSE_DIV2
-            : RCC_CFGR_PLLXTPRE_HSE);
+        static_assert(1 <= tDivider && tDivider <= 2, "Divider can be equal 1 or 2!");
+        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | (tDivider == 2
+                                                            ? RCC_CFGR_PLLXTPRE_HSE_DIV2
+                                                            : RCC_CFGR_PLLXTPRE_HSE);
 #endif
     }
 
@@ -62,10 +64,29 @@ namespace STM32::Clock
 #if !(defined(RCC_CFGR_PLLMULL3) && defined(RCC_CFGR_PLLMULL10))
         static_assert(4 <= multiplier && multiplier <= 9, "Multiplier can be equal 4..9!");
 #else
-        static_assert(4 <= multiplier && multiplier <= 9, "Multiplier cannot be greate than 16");
+        static_assert(4 <= multiplier && multiplier <= 16, "Multiplier cannot be greate than 16");
 #endif
         RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLMULL) | ((multiplier - 2) << RCC_CFGR_PLLMULL_Pos);
     }
+
+    template <uint32_t tDivider>
+    void PLLClock::setSysOutputDivider() { /** no divide */ }
+
+    template <uint32_t tDivider>
+    void PLLClock::setUSBOutputDivider()
+    {
+        if constexpr (tDivider == 0u)
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_USBPRE) | RCC_CFGR_USBPRE;
+        }
+        else
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_USBPRE);
+        }
+    }
+
+    template <uint32_t tDivider>
+    void PLLClock::setI2SOutputDivider() { /** no divide */ }
 
     enum class SysClock::Source
     {
@@ -81,11 +102,11 @@ namespace STM32::Clock
         {
             RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSI;
         }
-        if constexpr (source == SysClock::Source::HSE)
+        else if constexpr (source == SysClock::Source::HSE)
         {
             RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_HSE;
         }
-        if constexpr (source == SysClock::Source::PLL)
+        else if constexpr (source == SysClock::Source::PLL)
         {
             RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | RCC_CFGR_SW_PLL;
         }
@@ -106,11 +127,11 @@ namespace STM32::Clock
             DIV256 = RCC_CFGR_HPRE_DIV256,
             DIV512 = RCC_CFGR_HPRE_DIV512,
         };
-        
-        template <Prescaller Prescaller>
+
+        template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_HPRE) | static_cast<uint32_t>(prescaller);
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_HPRE) | static_cast<uint32_t>(tPrescaller);
         }
     };
 
@@ -126,10 +147,10 @@ namespace STM32::Clock
             DIV16 = RCC_CFGR_PPRE1_DIV16,
         };
 
-        template <Prescaller Prescaller>
+        template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1) | static_cast<uint32_t>(prescaller);
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1) | static_cast<uint32_t>(tPrescaller);
         }
     };
 
@@ -145,10 +166,10 @@ namespace STM32::Clock
             DIV16 = RCC_CFGR_PPRE2_DIV16,
         };
 
-        template <Prescaller Prescaller>
+        template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE2) | static_cast<uint32_t>(prescaller);
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE2) | static_cast<uint32_t>(tPrescaller);
         }
-    }
+    };
 }
