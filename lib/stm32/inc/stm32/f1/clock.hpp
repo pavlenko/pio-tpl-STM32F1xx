@@ -47,14 +47,18 @@ namespace STM32::Clock
     void PLLClock::setDivider()
     {
 #if defined(RCC_CFGR2_PREDIV1)
-        static_assert(divider <= 15, "Divider cannot be greater than 15!");
-        divider -= 1;
-        RCC->CFGR2 = ((RCC->CFGR2 & ~RCC_CFGR2_PREDIV1) | (divider << RCC_CFGR2_PREDIV1_Pos));
+        static_assert(tDivider <= 15, "Divider cannot be greater than 15!");
+        RCC->CFGR2 = ((RCC->CFGR2 & ~RCC_CFGR2_PREDIV1) | ((tDivider - 1) << RCC_CFGR2_PREDIV1_Pos));
 #else
         static_assert(1 <= tDivider && tDivider <= 2, "Divider can be equal 1 or 2!");
-        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | (tDivider == 2
-                                                            ? RCC_CFGR_PLLXTPRE_HSE_DIV2
-                                                            : RCC_CFGR_PLLXTPRE_HSE);
+        if constexpr (tDivider == 2)
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | RCC_CFGR_PLLXTPRE_HSE_DIV2;
+        }
+        else
+        {
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | RCC_CFGR_PLLXTPRE_HSE;
+        }
 #endif
     }
 
@@ -129,7 +133,7 @@ namespace STM32::Clock
         RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_SW) | selectMask;
 
         while (((RCC->CFGR & RCC_CFGR_SWS) != statusMask) && --timeout)
-            asm volatile ("nop");
+            asm volatile("nop");
     }
 
     class AHBClock : public BusClock<SysClock>
