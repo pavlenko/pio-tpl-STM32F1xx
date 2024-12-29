@@ -28,7 +28,7 @@ namespace STM32::Clock
         HSE,
     };
 
-    template <uint32_t tPLLMul, uint32_t tPLLDiv, uint32_t tUSBPre>
+    template <uint32_t tPLLMul, uint32_t tPLLDiv, bool tUSBPre>
     struct PLLClockConfig
     {
         static constexpr auto PLLMul = tPLLMul;
@@ -45,7 +45,40 @@ namespace STM32::Clock
     template <PLLClock::Source tSource, class tConfig>
     void PLLClock::configure()
     {
-        // TODO depends on source calculate clear mask & set mask at once if possible
+        static constexpr uint32_t divMask;
+        static constexpr uint32_t mulMask;
+        static constexpr uint32_t clrMask;
+
+#if defined(RCC_CFGR2_PREDIV1)
+        static_assert(tConfig.PLLDiv <= 15, "Divider cannot be greater than 15!");
+
+        static constexpr uint32_t divMask = (tConfig.PLLDiv - 1) << RCC_CFGR2_PREDIV1_Pos;
+        static constexpr uint32_t clrMask = ~(RCC_CFGR2_PREDIV1 | RCC_CFGR_PLLMULL | RCC_CFGR_USBPRE | RCC_CFGR_PLLSRC);
+#else
+        static_assert(1 <= tConfig.PLLDiv && tConfig.PLLDiv <= 2, "Divider can be equal 1 or 2!");
+
+        static constexpr uint32_t divMask = (tConfig.PLLDiv == 2) ? RCC_CFGR_PLLXTPRE_HSE_DIV2 : RCC_CFGR_PLLXTPRE_HSE;
+        static constexpr uint32_t clrMask = ~(RCC_CFGR_PLLXTPRE | RCC_CFGR_PLLMULL | RCC_CFGR_USBPRE | RCC_CFGR_PLLSRC);
+#endif
+#if !(defined(RCC_CFGR_PLLMULL3) && defined(RCC_CFGR_PLLMULL10))
+        static_assert(4 <= tConfig.PLLMul && tConfig.PLLMul <= 9, "Multiplier can be equal 4..9!");
+#else
+        static_assert(4 <= tConfig.PLLMul && tConfig.PLLMul <= 16, "Multiplier cannot be greate than 16");
+#endif
+        static constexpr uint32_t mulMask = (tConfig.PLLMul - 2) << RCC_CFGR_PLLMULL_Pos;
+        static constexpr uint32_t usbMask = tConfig.USBPre ? 0u : RCC_CFGR_USBPRE;
+        static constexpr uint32_t setMask = divMask | mulMask | usbMask;
+
+        if constexpr (tSource == PLLClock::Source::HSI)
+        {
+            RCC->CFGR = (RCC->CFGR & clrMask) | setMask;
+            PLLClockFrequency = HSIClock::getFrequency() * tConfig.PLLMul / tConfig.PLLDiv;
+        }
+        else
+        {
+            RCC->CFGR = (RCC->CFGR & clrMask) | setMask | RCC_CFGR_PLLSRC;
+            PLLClockFrequency = HSEClock::getFrequency() * tConfig.PLLMul / tConfig.PLLDiv;
+        }
     }
 
     template <PLLClock::Source source>
