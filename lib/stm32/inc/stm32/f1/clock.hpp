@@ -20,15 +20,33 @@ namespace STM32::Clock
 
     bool HSEClock::off() { ClockBase::disable<&RCC_TypeDef::CR, RCC_CR_HSEON, RCC_CR_HSERDY>(); }
 
+    static volatile uint32_t PLLClockFrequency{0};
+
     enum class PLLClock::Source
     {
         HSI,
         HSE,
     };
 
+    template <uint32_t tPLLMul, uint32_t tPLLDiv, uint32_t tUSBPre>
+    struct PLLClockConfig
+    {
+        static constexpr auto PLLMul = tPLLMul;
+        static constexpr auto PLLDiv = tPLLDiv;
+        static constexpr auto USBPre = tUSBPre;
+    };
+
+    uint32_t PLLClock::getFrequency() { return PLLClockFrequency; }
+
     bool PLLClock::on() { ClockBase::enable<&RCC_TypeDef::CR, RCC_CR_PLLON, RCC_CR_PLLRDY>(); }
 
     bool PLLClock::off() { ClockBase::disable<&RCC_TypeDef::CR, RCC_CR_PLLON, RCC_CR_PLLRDY>(); }
+
+    template <PLLClock::Source tSource, class tConfig>
+    void PLLClock::configure()
+    {
+        // TODO depends on source calculate clear mask & set mask at once if possible
+    }
 
     template <PLLClock::Source source>
     void PLLClock::selectSource()

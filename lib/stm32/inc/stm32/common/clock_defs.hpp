@@ -254,6 +254,15 @@ namespace STM32::Clock
         static inline bool off();
 
         /**
+         * @brief Configure PLL
+         *
+         * @tparam tSource
+         * @tparam tConfig
+         */
+        template <Source tSource, class tConfig>
+        static inline void configure();
+
+        /**
          * @brief Select PLL clock source
          *
          * @tparam source
