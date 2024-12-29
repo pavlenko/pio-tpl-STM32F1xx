@@ -81,68 +81,6 @@ namespace STM32::Clock
         }
     }
 
-    template <PLLClock::Source source>
-    void PLLClock::selectSource()
-    {
-        if constexpr (source == PLLClock::Source::HSE)
-        {
-            RCC->CFGR |= RCC_CFGR_PLLSRC;
-        }
-        else
-        {
-            RCC->CFGR &= ~RCC_CFGR_PLLSRC;
-        }
-    }
-
-    template <uint32_t tDivider>
-    void PLLClock::setDivider()
-    {
-#if defined(RCC_CFGR2_PREDIV1)
-        static_assert(tDivider <= 15, "Divider cannot be greater than 15!");
-        RCC->CFGR2 = ((RCC->CFGR2 & ~RCC_CFGR2_PREDIV1) | ((tDivider - 1) << RCC_CFGR2_PREDIV1_Pos));
-#else
-        static_assert(1 <= tDivider && tDivider <= 2, "Divider can be equal 1 or 2!");
-        if constexpr (tDivider == 2)
-        {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | RCC_CFGR_PLLXTPRE_HSE_DIV2;
-        }
-        else
-        {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLXTPRE) | RCC_CFGR_PLLXTPRE_HSE;
-        }
-#endif
-    }
-
-    template <uint32_t multiplier>
-    void PLLClock::setMultiplier()
-    {
-#if !(defined(RCC_CFGR_PLLMULL3) && defined(RCC_CFGR_PLLMULL10))
-        static_assert(4 <= multiplier && multiplier <= 9, "Multiplier can be equal 4..9!");
-#else
-        static_assert(4 <= multiplier && multiplier <= 16, "Multiplier cannot be greate than 16");
-#endif
-        RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PLLMULL) | ((multiplier - 2) << RCC_CFGR_PLLMULL_Pos);
-    }
-
-    template <uint32_t tDivider>
-    void PLLClock::setSysOutputDivider() { /** no divide */ }
-
-    template <uint32_t tDivider>
-    void PLLClock::setUSBOutputDivider()
-    {
-        if constexpr (tDivider == 0u)
-        {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_USBPRE) | RCC_CFGR_USBPRE;
-        }
-        else
-        {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_USBPRE);
-        }
-    }
-
-    template <uint32_t tDivider>
-    void PLLClock::setI2SOutputDivider() { /** no divide */ }
-
     enum class SysClock::Source
     {
         HSI,
