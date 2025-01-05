@@ -132,15 +132,15 @@ namespace STM32::Clock
     public:
         enum class Prescaler
         {
-            DIV1 = RCC_CFGR_HPRE_DIV1,
-            DIV2 = RCC_CFGR_HPRE_DIV2,
-            DIV4 = RCC_CFGR_HPRE_DIV4,
-            DIV8 = RCC_CFGR_HPRE_DIV8,
-            DIV16 = RCC_CFGR_HPRE_DIV16,
-            DIV64 = RCC_CFGR_HPRE_DIV64,
-            DIV128 = RCC_CFGR_HPRE_DIV128,
-            DIV256 = RCC_CFGR_HPRE_DIV256,
-            DIV512 = RCC_CFGR_HPRE_DIV512,
+            DIV1 = RCC_CFGR_HPRE_DIV1 >> RCC_CFGR_HPRE_Pos,
+            DIV2 = RCC_CFGR_HPRE_DIV2 >> RCC_CFGR_HPRE_Pos,
+            DIV4 = RCC_CFGR_HPRE_DIV4 >> RCC_CFGR_HPRE_Pos,
+            DIV8 = RCC_CFGR_HPRE_DIV8 >> RCC_CFGR_HPRE_Pos,
+            DIV16 = RCC_CFGR_HPRE_DIV16 >> RCC_CFGR_HPRE_Pos,
+            DIV64 = RCC_CFGR_HPRE_DIV64 >> RCC_CFGR_HPRE_Pos,
+            DIV128 = RCC_CFGR_HPRE_DIV128 >> RCC_CFGR_HPRE_Pos,
+            DIV256 = RCC_CFGR_HPRE_DIV256 >> RCC_CFGR_HPRE_Pos,
+            DIV512 = RCC_CFGR_HPRE_DIV512 >> RCC_CFGR_HPRE_Pos,
         };
 
         static inline uint32_t getFrequency()
@@ -151,7 +151,11 @@ namespace STM32::Clock
         template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_HPRE) | static_cast<uint32_t>(tPrescaller);
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_HPRE) | (static_cast<uint32_t>(tPrescaller) << RCC_CFGR_HPRE_Pos);
+            
+            static constexpr uint8_t shiftMap[] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
+            static constexpr uint8_t shiftBits = shiftMap[tPrescaller];
+            AHBClockFrequency = SysClock::getFrequency() >> shiftBits;
         }
     };
 
