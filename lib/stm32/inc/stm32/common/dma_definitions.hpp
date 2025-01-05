@@ -123,12 +123,24 @@ namespace STM32::DMA
         static inline void disable();
 
         /**
+         * @brief Check if DMA channel is enabled
+         */
+        static inline bool isEnabled();
+
+        /**
          * @brief Check if DMA channel is ready for transfer
          *
          * @return bool Ready state
          */
         static inline bool isReady();
 
+        /**
+         * @brief Check if circular transfer enabled
+         *
+         * @return bool
+         */
+        static inline bool isCircular();
+        
         /**
          * @brief Get remaining data count
          *
