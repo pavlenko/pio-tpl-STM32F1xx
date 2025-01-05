@@ -130,6 +130,13 @@ namespace STM32::DMA
         static inline bool isReady();
 
         /**
+         * @brief Get remaining data count
+         *
+         * @return Remaining count
+         */
+        static inline uint32_t getRemaining();
+
+        /**
          * @brief Set optional transfer callback
          *
          * @param cb Callback
