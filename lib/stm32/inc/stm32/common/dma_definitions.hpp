@@ -17,6 +17,7 @@ namespace STM32::DMA
     template <typename tDriver, uint32_t tRegsAddress, uint32_t tChannel, IRQn_Type tIRQn>
     class Channel 
     {
+    public:
         /**
          * @brief Transfer data via DMA
          *
@@ -42,6 +43,15 @@ namespace STM32::DMA
     template <uint32_t tRegsAddress, typename tClock>
     class Driver
     {
+    private:
+        /**
+         * @brief Get ptr to DMA registers struct
+         *
+         * @return Registers struct ptr
+         */
+        static constexpr DMA_TypeDef *_regs();
+
+    public:
         /**
          * @brief Enable DMA clock
          */
