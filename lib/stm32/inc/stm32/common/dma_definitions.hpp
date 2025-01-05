@@ -157,6 +157,23 @@ namespace STM32::DMA
          * @brief Abort DMA transfer
          */
         static inline void abort();
+
+        /**
+         * @brief Check flag is set
+         */
+        template <Flag tFlag>
+        static inline bool hasFlag();
+
+        /**
+         * @brief Clear flag
+         */
+        template <Flag tFlag>
+        static inline void clrFlag();
+
+        /**
+         * @brief Clear all flags
+         */
+        static inline void clrFlags();
     };
 
     /**
