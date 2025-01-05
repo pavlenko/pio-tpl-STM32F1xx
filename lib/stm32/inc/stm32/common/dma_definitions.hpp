@@ -174,6 +174,11 @@ namespace STM32::DMA
          * @brief Clear all flags
          */
         static inline void clrFlags();
+
+        /**
+         * @brief Dispatch channel IRQ (base logic)
+         */
+        static inline void dispatchIRQ();
     };
 
     /**
