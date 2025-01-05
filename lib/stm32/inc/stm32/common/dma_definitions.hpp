@@ -95,6 +95,16 @@ namespace STM32::DMA
     {
     public:
         /**
+         * @brief Enable DMA channel
+         */
+        static inline void enable();
+
+        /**
+         * @brief Disable DMA channel
+         */
+        static inline void disable();
+
+        /**
          * @brief Transfer data via DMA
          *
          * @param config Transfer configuration
