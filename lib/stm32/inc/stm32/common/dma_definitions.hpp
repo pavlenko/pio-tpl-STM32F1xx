@@ -4,7 +4,24 @@ namespace STM32::DMA
 {
     enum class Config;
 
-    enum class Flags;
+    enum class Flag
+    {
+#ifdef DMA_CCR_EN
+        GLOBAL = DMA_IFCR_CGIF1,
+        TRANSFER_COMPLETE = DMA_IFCR_CTCIF1,
+        HALF_TRANSFER = DMA_IFCR_CHTIF1,
+        TRANSFER_ERROR = DMA_IFCR_CTEIF1,
+        ALL = GLOBAL | TRANSFER_COMPLETE | HALF_TRANSFER | TRANSFER_ERROR,
+#endif
+#ifdef DMA_SxCR_EN
+        TRANSFER_COMPLETE = DMA_LISR_TCIF0,
+        HALF_TRANSFER = DMA_LISR_HTIF0,
+        TRANSFER_ERROR = DMA_LISR_TEIF0,
+        FIFO_ERROR = DMA_LISR_FEIF0,
+        DIRECT_ERROR = DMA_LISR_DMEIF0,
+        ALL = TRANSFER_COMPLETE | HALF_TRANSFER | TRANSFER_ERROR | FIFO_ERROR | DIRECT_ERROR,
+#endif
+    };//TODO add boolean operators
 
     /**
      * @brief DMA channel APIs
