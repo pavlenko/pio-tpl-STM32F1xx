@@ -93,6 +93,24 @@ namespace STM32::DMA
     template <typename tDriver, uint32_t tRegsAddress, uint32_t tChannel, IRQn_Type tIRQn>
     class Channel 
     {
+    private:
+        /**
+         * @brief Callback for success/error transfer
+         */
+        static inline T cb;
+
+        /**
+         * @brief Get ptr to DMA channel registers
+         *
+         * @return Registers struct ptr
+         */
+#ifdef DMA_CCR_EN
+        static inline DMA_Channel_TypeDef *_regs();
+#endif
+#ifdef DMA_SxCR_EN
+        static inline DMA_Stream_TypeDef *_regs();
+#endif
+
     public:
         /**
          * @brief Enable DMA channel
@@ -103,6 +121,20 @@ namespace STM32::DMA
          * @brief Disable DMA channel
          */
         static inline void disable();
+
+        /**
+         * @brief Check if DMA channel is ready for transfer
+         *
+         * @return bool Ready state
+         */
+        static inline bool isReady();
+
+        /**
+         * @brief Set optional transfer callback
+         *
+         * @param cb Callback
+         */
+        static inline void setTransferCallback(T cb);
 
         /**
          * @brief Transfer data via DMA
@@ -135,7 +167,7 @@ namespace STM32::DMA
          *
          * @return Registers struct ptr
          */
-        static constexpr DMA_TypeDef *_regs();
+        static inline DMA_TypeDef *_regs();
 
     public:
         /**
