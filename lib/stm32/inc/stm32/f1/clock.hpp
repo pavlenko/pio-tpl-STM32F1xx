@@ -162,11 +162,11 @@ namespace STM32::Clock
     public:
         enum class Prescaler
         {
-            DIV1 = RCC_CFGR_PPRE1_DIV1,
-            DIV2 = RCC_CFGR_PPRE1_DIV2,
-            DIV4 = RCC_CFGR_PPRE1_DIV4,
-            DIV8 = RCC_CFGR_PPRE1_DIV8,
-            DIV16 = RCC_CFGR_PPRE1_DIV16,
+            DIV1 = RCC_CFGR_PPRE1_DIV1 >> RCC_CFGR_PPRE1_Pos,
+            DIV2 = RCC_CFGR_PPRE1_DIV2 >> RCC_CFGR_PPRE1_Pos,
+            DIV4 = RCC_CFGR_PPRE1_DIV4 >> RCC_CFGR_PPRE1_Pos,
+            DIV8 = RCC_CFGR_PPRE1_DIV8 >> RCC_CFGR_PPRE1_Pos,
+            DIV16 = RCC_CFGR_PPRE1_DIV16 >> RCC_CFGR_PPRE1_Pos,
         };
 
         static inline uint32_t getFrequency()
@@ -177,7 +177,11 @@ namespace STM32::Clock
         template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1) | static_cast<uint32_t>(tPrescaller);
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1) | (static_cast<uint32_t>(tPrescaller) << RCC_CFGR_PPRE1_Pos;
+
+            static constexpr uint8_t shiftMap[] = {0, 0, 0, 0, 1, 2, 3, 4};
+            static constexpr uint8_t shiftBits = shiftMap[tPrescaller];
+            APB1ClockFrequency = AHBClock::getFrequency() >> shiftBits;
         }
     };
 
@@ -188,11 +192,11 @@ namespace STM32::Clock
     public:
         enum class Prescaler
         {
-            DIV1 = RCC_CFGR_PPRE2_DIV1,
-            DIV2 = RCC_CFGR_PPRE2_DIV2,
-            DIV4 = RCC_CFGR_PPRE2_DIV4,
-            DIV8 = RCC_CFGR_PPRE2_DIV8,
-            DIV16 = RCC_CFGR_PPRE2_DIV16,
+            DIV1 = RCC_CFGR_PPRE2_DIV1 >> RCC_CFGR_PPRE2_Pos,
+            DIV2 = RCC_CFGR_PPRE2_DIV2 >> RCC_CFGR_PPRE2_Pos,
+            DIV4 = RCC_CFGR_PPRE2_DIV4 >> RCC_CFGR_PPRE2_Pos,
+            DIV8 = RCC_CFGR_PPRE2_DIV8 >> RCC_CFGR_PPRE2_Pos,
+            DIV16 = RCC_CFGR_PPRE2_DIV16 >> RCC_CFGR_PPRE2_Pos,
         };
 
         static inline uint32_t getFrequency()
@@ -203,11 +207,11 @@ namespace STM32::Clock
         template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
-            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE2) | static_cast<uint32_t>(tPrescaller);
+            RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE2) | (static_cast<uint32_t>(tPrescaller) << RCC_CFGR_PPRE2_Pos);
 
-            static constexpr uint8_t clockPrescShift[] = {0, 0, 0, 0, 1, 2, 3, 4};
-            static constexpr uint8_t shiftBits = clockPrescShift[tPrescaller];
-            APB2ClockFrequency = AHBClock::getFrequency() >>= shiftBits;
+            static constexpr uint8_t shiftMap[] = {0, 0, 0, 0, 1, 2, 3, 4};
+            static constexpr uint8_t shiftBits = shiftMap[tPrescaller];
+            APB2ClockFrequency = AHBClock::getFrequency() >> shiftBits;
         }
     };
 }
