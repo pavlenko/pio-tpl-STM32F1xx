@@ -204,6 +204,10 @@ namespace STM32::Clock
         static inline void setPrescaller()
         {
             RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE2) | static_cast<uint32_t>(tPrescaller);
+
+            static constexpr uint8_t clockPrescShift[] = {0, 0, 0, 0, 1, 2, 3, 4};
+            static constexpr uint8_t shiftBits = clockPrescShift[tPrescaller];
+            APB2ClockFrequency = AHBClock::getFrequency() >>= shiftBits;
         }
     };
 }
