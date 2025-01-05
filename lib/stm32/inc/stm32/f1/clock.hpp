@@ -125,6 +125,8 @@ namespace STM32::Clock
             asm volatile("nop");
     }
 
+    static volatile uint32_t AHBClockFrequency{0};
+
     class AHBClock : public BusClock<SysClock>
     {
     public:
@@ -141,12 +143,19 @@ namespace STM32::Clock
             DIV512 = RCC_CFGR_HPRE_DIV512,
         };
 
+        static inline uint32_t getFrequency()
+        {
+            return AHBClockFrequency;
+        }
+
         template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
             RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_HPRE) | static_cast<uint32_t>(tPrescaller);
         }
     };
+
+    static volatile uint32_t APB1ClockFrequency{0};
 
     class APB1Clock : public BusClock<AHBClock>
     {
@@ -160,12 +169,19 @@ namespace STM32::Clock
             DIV16 = RCC_CFGR_PPRE1_DIV16,
         };
 
+        static inline uint32_t getFrequency()
+        {
+            return APB1ClockFrequency;
+        }
+
         template <Prescaller tPrescaller>
         static inline void setPrescaller()
         {
             RCC->CFGR = (RCC->CFGR & ~RCC_CFGR_PPRE1) | static_cast<uint32_t>(tPrescaller);
         }
     };
+
+    static volatile uint32_t APB2ClockFrequency{0};
 
     class APB2Clock : public BusClock<AHBClock>
     {
@@ -178,6 +194,11 @@ namespace STM32::Clock
             DIV8 = RCC_CFGR_PPRE2_DIV8,
             DIV16 = RCC_CFGR_PPRE2_DIV16,
         };
+
+        static inline uint32_t getFrequency()
+        {
+            return APB2ClockFrequency;
+        }
 
         template <Prescaller tPrescaller>
         static inline void setPrescaller()
