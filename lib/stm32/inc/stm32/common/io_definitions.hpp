@@ -34,10 +34,21 @@ namespace STM32::IO
     /**
      * @brief IO pin API
      */
-    template <typename tPort, uint8_t tNumber>
+    template <typename tPort, uint32_t tRegsAddr, uint8_t tNumber>
     class Pin
     {
+    private:
+        static_assert(tNumber < 16u, "Invalid pin number");
+
+        static constexpr const uint8_t _2bit_pos = tNumber * 2u;
+        static constexpr const uint8_t _4bit_pos = (tNumber & 0x7u) * 4u;
+
+        static inline GPIO_TypeDef* _regs();
+
     public:
+        using Port = tPort;
+        using number = tNumber;
+
         /**
          * @brief Configure pin mode, pull, speed...
          */
@@ -72,16 +83,12 @@ namespace STM32::IO
     /**
      * @brief IO port API
      */
-    template <typename tClock>
+    template <typename tClock, uint8_t tIndex>
     class Port
     {
-    private:
-        /**
-         * @brief Get port regs ptr
-         */
-        static constexpr GPIO_TypeDef* regs();
-
     public:
+        using index = tIndex;
+
         /**
          * @brief Enable port clock
          */
