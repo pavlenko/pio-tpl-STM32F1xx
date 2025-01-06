@@ -2,6 +2,14 @@
 
 namespace STM32::DMA
 {
+    /**
+     * @brief DMA callback type, allow lambdas
+     */
+    using CallbackT = std::add_pointer_t<void()>;
+
+    /**
+     * @brief DMA config options
+     */
     enum class Config
     {
 #ifdef DMA_CCR_EN
@@ -63,6 +71,9 @@ namespace STM32::DMA
 #endif
     };
 
+    /**
+     * @brief DMA interrupt flags
+     */
     enum class Flag
     {
 #ifdef DMA_CCR_EN
@@ -97,7 +108,7 @@ namespace STM32::DMA
         /**
          * @brief Callback for success/error transfer
          */
-        static inline T cb;
+        static inline CallbackT cb;
 
         /**
          * @brief Get ptr to DMA channel registers
@@ -153,7 +164,7 @@ namespace STM32::DMA
          *
          * @param cb Callback
          */
-        static inline void setTransferCallback(T cb);
+        static inline void setTransferCallback(CallbackT cb);
 
         /**
          * @brief Transfer data via DMA
