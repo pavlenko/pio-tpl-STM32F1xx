@@ -69,13 +69,14 @@ namespace STM32
         static inline bool erasePage(uint16_t page);
 
         /**
-         * @brief Write page data
+         * @brief Write data
          *
          * @param address Page address
          * @param data Data to write
          *
          * @return Success state
+         * TODO 8/16/32/64 blocks mode
          */
-        static inline bool writePage(uint32_t address, uint16_t data);
+        static inline bool write(uint32_t address, uint16_t data);
     };
 }
