@@ -83,10 +83,35 @@ namespace STM32::UART
          */
         static inline bool recv(void *data, uint16_t size);
 
+        /**
+         * @brief Check if tx in progress
+         *
+         * @return Busy or not
+         */
         static inline bool busyTx();
+
+        /**
+         * @brief Check if rx in progress
+         *
+         * @return Busy or not
+         */
         static inline bool busyRx();
+
+        /**
+         * @brief Check IRQ flag(s) is set
+         *
+         * @tparam tFlag Flag(s) to check
+         *
+         * @return Flag is set or not
+         */
         template <Flag tFlag>
         static inline bool hasFlag();
+
+        /**
+         * @brief Clear IRQ flag(s)
+         *
+         * @tparam tFlag Flag(s) to clear
+         */
         template <Flag tFlag>
         static inline void clrFlag();
     };
