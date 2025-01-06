@@ -93,6 +93,11 @@ namespace STM32::DMA
 #endif
     };
 
+    constexpr inline Config operator|(Config lft, Config rgt)
+    {
+        return Config(static_cast<uint32_t>(lft) | static_cast<uint32_t>(rgt));
+    }
+
     /**
      * @brief DMA channel APIs
      *
