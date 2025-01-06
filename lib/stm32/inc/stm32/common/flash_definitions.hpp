@@ -1,8 +1,5 @@
 #pragma once
 
-//todo
-// write by page number 
-// write buffer
 namespace STM32
 {
     /**
@@ -69,14 +66,27 @@ namespace STM32
         static inline bool erasePage(uint16_t page);
 
         /**
-         * @brief Write data
+         * @brief Write data to flash
          *
-         * @param address Page address
-         * @param data Data to write
+         * @tparam T data type, typically uintXX_t
          *
-         * @return Success state
-         * TODO 8/16/32/64 blocks mode
+         * @param address Flash address
+         * @param data    Data to write
+         *
+         * @return Success or not
          */
-        static inline bool write(uint32_t address, uint16_t data);
+        template <typename T>
+        static inline bool write(uint32_t address, T data);
+
+        /**
+         * @brief Write data buffer to flash
+         *
+         * @param address Flash address 
+         * @patam data    Data buffer ptr
+         * @patam size    Data size in bytes
+         *
+         * @return Success or not
+         */
+        static inline bool write(uint32_t address, void *data, uint32_t size);
     };
 }
