@@ -2,7 +2,7 @@
 
 namespace STM32::UART
 {
-    enum Flag : uint32_t
+    enum Flag : uint32_t //split to common & extended
     {
         NONE = 0,
 #ifdef USART_SR_PE
@@ -54,9 +54,35 @@ namespace STM32::UART
         static constexpr USART_TypeDef* regs();
 
     public:
+        using DMATx = tDMATx;
+        using DMARx = tDMARx;
+
+        /**
+         * @brief Configure UART
+         */
+        template <typename tConfig>
         static inline void configure();
+
+        /**
+         * @brief Send data async
+         *
+         * @param data Data ptr
+         * @param size Data size
+         *
+         * @return Success or not
+         */
         static inline bool send(void *data, uint16_t size);
+
+        /**
+         * @brief Receive data async
+         *
+         * @param data Data ptr
+         * @param size Data size
+         *
+         * @return Success or not
+         */
         static inline bool recv(void *data, uint16_t size);
+
         static inline bool busyTx();
         static inline bool busyRx();
         template <Flag tFlag>
