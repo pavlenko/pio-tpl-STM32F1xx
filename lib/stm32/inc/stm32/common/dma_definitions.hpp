@@ -5,7 +5,7 @@ namespace STM32::DMA
     /**
      * @brief DMA callback type, allow lambdas
      */
-    using CallbackT = std::add_pointer_t<void()>;
+    using CallbackT = std::add_pointer_t<void(bool success)>;
 
     /**
      * @brief DMA config options
