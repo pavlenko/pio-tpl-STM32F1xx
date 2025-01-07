@@ -96,6 +96,8 @@ namespace STM32::UART
 
         /**
          * @brief Configure UART
+         *
+         * @tparam tConfig Config
          */
         template <Config tConfig>
         static inline void configure();
@@ -105,11 +107,9 @@ namespace STM32::UART
          *
          * @param data Data ptr
          * @param size Data size
-         * @param cb   Callback 
-         *
-         * @return Success or not
+         * @param cb   Callback
          */
-        static inline bool send(void *data, uint16_t size, CallbackT cb);
+        static inline void send(void *data, uint16_t size, CallbackT cb);
 
         /**
          * @brief Receive data async
@@ -117,10 +117,8 @@ namespace STM32::UART
          * @param data Data ptr
          * @param size Data size
          * @param cb   Callback
-         *
-         * @return Success or not
          */
-        static inline bool recv(void *data, uint16_t size, CallbackT cb);
+        static inline void recv(void *data, uint16_t size, CallbackT cb);
 
         /**
          * @brief Check if tx in progress
