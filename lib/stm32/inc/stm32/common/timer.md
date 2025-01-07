@@ -1,4 +1,5 @@
-Advanced TIM1 and TIM8 timer features include:
+#### Advanced TIM1 and TIM8 timer features include:
+
 - 16-bit up, down, up/down auto-reload counter.
 - 16-bit programmable prescaler allowing dividing (also “on the fly”) the counter clock frequency either by any factor between 1 and 65536.
 - Up to 4 independent channels for:
@@ -20,7 +21,8 @@ Advanced TIM1 and TIM8 timer features include:
 - Trigger input for external clock or cycle-by-cycle current management
 
 
-General-purpose TIMx timer features include:
+#### General-purpose TIMx timer features include:
+
 - 16-bit up, down, up/down auto-reload counter.
 - 16-bit programmable prescaler used to divide (also “on the fly”) the counter clock frequency by any factor between 1 and 65536.
 - Up to 4 independent channels for:
@@ -37,8 +39,8 @@ General-purpose TIMx timer features include:
 - Supports incremental (quadrature) encoder and hall-sensor circuitry for positioning purposes
 - Trigger input for external clock or cycle-by-cycle current management
 
+#### The features of the TIM9 to TIM14 general-purpose timers include:
 
-The features of the TIM9 to TIM14 general-purpose timers include:
 - 16-bit auto-reload upcounter
 - 16-bit programmable prescaler used to divide the counter clock frequency by any factor between 1 and 65536 (can be changed “on the fly”)
 - Up to 2 independent channels for:
@@ -53,8 +55,8 @@ The features of the TIM9 to TIM14 general-purpose timers include:
   – Input capture
   – Output compare
 
+#### The features of general-purpose timers TIM10/TIM11 and TIM13/TIM14 include:
 
-The features of general-purpose timers TIM10/TIM11 and TIM13/TIM14 include:
 - 16-bit auto-reload upcounter
 - 16-bit programmable prescaler used to divide the counter clock frequency by any factor between 1 and 65536 (can be changed “on the fly”)
 - Independent channel for:
@@ -67,8 +69,8 @@ The features of general-purpose timers TIM10/TIM11 and TIM13/TIM14 include:
   – Input capture
   – Output compare
 
+#### Basic timer (TIM6 and TIM7) features include:
 
-Basic timer (TIM6 and TIM7) features include:
 - 16-bit auto-reload upcounter
 - 16-bit programmable prescaler used to divide (also “on the fly”) the counter clock frequency by any factor between 1 and 65536
 - Synchronization circuit to trigger the DAC
