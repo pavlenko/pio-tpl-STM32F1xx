@@ -2,13 +2,12 @@
 
 namespace STM32::UART
 {
-
    /**
-     * @brief DMA callback type, allow lambdas
+     * @brief UART callback type, allow lambdas
      */
     using CallbackT = std::add_pointer_t<void(bool success)>;
 
-    enum class Config
+    enum class Config : uint32_t
     {
         // Mode bits
         ENABLE_RX = USART_CR1_RE,
@@ -35,7 +34,7 @@ namespace STM32::UART
         return Config(static_cast<uint32_t>(l) | static_cast<uint32_t>(r));
     }
 
-    enum class Flag : uint32_t //split to common & extended
+    enum class Flag : uint32_t
     {
         NONE = 0,
 #ifdef USART_SR_PE
