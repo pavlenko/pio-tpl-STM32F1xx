@@ -13,7 +13,7 @@ namespace STM32::UART
         DATA_9BIT = USART_CR1_M,
         // Stop bits
         STOP_1BIT = 0,
-        STOP_2BIT = USART_CR2_STOP_1,
+        STOP_2BIT = USART_CR2_STOP_1 << 16,
         // Parity control
         PARITY_NONE = 0
         PARITY_EVEN = USART_CR1_PCE,
@@ -24,7 +24,12 @@ namespace STM32::UART
         ENABLE_RTS_CTS = ENABLE_RTS | ENABLE_CTS,
     };
 
-    enum Flag : uint32_t //split to common & extended
+    inline constexpr Config operator|(Config l, Config r)
+    {
+        return Config(static_cast<uint32_t>(l) | static_cast<uint32_t>(r));
+    }
+
+    enum class Flag : uint32_t //split to common & extended
     {
         NONE = 0,
 #ifdef USART_SR_PE
@@ -63,6 +68,11 @@ namespace STM32::UART
         ALL = ERRORS | TX_EMPTY | TX_COMPLETE | RX_NOT_EMPTY | IDLE | LINE_BREAK | CTS
     };
 
+    inline constexpr Flag operator|(Flag l, Flag r)
+    {
+        return Flag(static_cast<uint32_t>(l) | static_cast<uint32_t>(r));
+    }
+
     template <
         uint32_t tRegsAddr,
         IRQn_Type tIRQn,
@@ -82,7 +92,7 @@ namespace STM32::UART
         /**
          * @brief Configure UART
          */
-        template <typename tConfig>
+        template <Config tConfig>
         static inline void configure();
 
         /**
