@@ -1,9 +1,5 @@
 #pragma once
 
-// todo resolve features for each type to split logic
-// basic:
-// general:
-// advanced:
 namespace STM32::Timer
 {
     // All timer`s interrupts
@@ -60,8 +56,39 @@ namespace STM32::Timer
     };
 
     class GPTimer : public BasicTimer
-    {};
+    {
+    private:
+        template <uint8_t tNumber>
+        class Channel
+        {
+        public:
+            static inline void enable();
+            static inline void disable();
+            static inline bool hasIRQFlag();
+            static inline void clrIRQFlag();
+            static inline void attachIRQ();
+            static inline void detachIRQ();
+            static inline void attachDMA();
+            static inline void detachDMA();
+        };
 
-    class AdvancedTimer : public BasicTimer
+    public:
+        template <uint8_t tNumber>
+        class ICapture : public Channel<tNumber>
+        {
+        public:
+            static inline void configure();
+        };
+
+        template <uint8_t tNumber>
+        class OCompare : public Channel<tNumber>;
+
+        template <uint8_t tNumber>
+        class PWMGeneration : public OCompare<tNumber>;
+
+        class SlaveMode;
+    };
+
+    class AdvancedTimer : public GPTimer
     {};
 }
