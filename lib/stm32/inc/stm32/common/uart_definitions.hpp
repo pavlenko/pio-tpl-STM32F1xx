@@ -2,6 +2,28 @@
 
 namespace STM32::UART
 {
+    enum class Config
+    {
+        // Mode bits
+        ENABLE_RX = USART_CR1_RE,
+        ENABLE_TX = USART_CR1_TE,
+        ENABLE_RX_TX = ENABLE_RX | ENABLE_TX,
+        // Data bits
+        DATA_8BIT = 0,
+        DATA_9BIT = USART_CR1_M,
+        // Stop bits
+        STOP_1BIT = 0,
+        STOP_2BIT = USART_CR2_STOP_1,
+        // Parity control
+        PARITY_NONE = 0
+        PARITY_EVEN = USART_CR1_PCE,
+        PARITY_ODD = USART_CR1_PCE | USART_CR1_PS,
+        // HW control
+        ENABLE_RTS = USART_CR3_RTSE << 16,
+        ENABLE_CTS = USART_CR3_CTSE << 16,
+        ENABLE_RTS_CTS = ENABLE_RTS | ENABLE_CTS,
+    };
+
     enum Flag : uint32_t //split to common & extended
     {
         NONE = 0,
