@@ -2,6 +2,12 @@
 
 namespace STM32::UART
 {
+
+   /**
+     * @brief DMA callback type, allow lambdas
+     */
+    using CallbackT = std::add_pointer_t<void(bool success)>;
+
     enum class Config
     {
         // Mode bits
@@ -54,7 +60,7 @@ namespace STM32::UART
         LINE_BREAK = 0,
 #endif
         CTS = USART_ISR_CTS,
-        ERRORS = USART_ISR_FE | USART_ISR_NE | USART_ISR_ORE,
+        ERRORS = USART_ISR_PE | USART_ISR_FE | USART_ISR_NE | USART_ISR_ORE,
 #ifdef USART_CR1_FIFOEN
         RX_FIFO_FULL = USART_ISR_RXFF,
         TX_FIFO_EMPTY = USART_ISR_TXFE,
@@ -100,20 +106,22 @@ namespace STM32::UART
          *
          * @param data Data ptr
          * @param size Data size
+         * @param cb   Callback 
          *
          * @return Success or not
          */
-        static inline bool send(void *data, uint16_t size);
+        static inline bool send(void *data, uint16_t size, CallbackT cb);
 
         /**
          * @brief Receive data async
          *
          * @param data Data ptr
          * @param size Data size
+         * @param cb   Callback
          *
          * @return Success or not
          */
-        static inline bool recv(void *data, uint16_t size);
+        static inline bool recv(void *data, uint16_t size, CallbackT cb);
 
         /**
          * @brief Check if tx in progress
