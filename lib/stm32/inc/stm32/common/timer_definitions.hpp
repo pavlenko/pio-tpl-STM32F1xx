@@ -37,7 +37,7 @@ namespace STM32::Timer
     };
 
     // Timer master mode
-    enum class TriggerMode
+    enum class MasterMode
     {
         RESET = 0x0 << TIM_CR2_MMS_Pos,///< Reset is used as TRGO
         ENABLE = 0x1 << TIM_CR2_MMS_Pos,///< Counter enable is used as TRGO
@@ -52,9 +52,18 @@ namespace STM32::Timer
     template <uint32_t tRegsAddr, IRQn_Type tIRQn, typename tClock>
     class BasicTimer
     {
+        //config: prescaller, period, one-pulse(?)
         static inline void configure();
         static inline void enable();
         static inline void disable();
+        static inline void start();
+        static inline void stop();
+        static inline void setValue(uint16_t);
+        static inline uint16_t getValue();
+        static inline void attachIRQ(IRQFlags flags);
+        static inline void detachIRQ(IRQFlags flags);
+        static inline void attachDMARequest();
+        static inline void detachDMARequest();
     };
 
     template <uint32_t tRegsAddr, IRQn_Type tIRQn, typename tClock>
@@ -80,6 +89,22 @@ namespace STM32::Timer
         class ICapture : public Channel<tNumber>
         {
         public:
+            // Capture polarity
+            enum class Polarity
+            {
+                RISING = 0,
+                FALLING = TIM_CCER_CC1P,
+                BOTH = TIM_CCER_CC1P | TIM_CCER_CC1NP,
+            };
+                
+            // Capture mode
+            enum class Mode
+            {
+                DIRECT = TIM_CCMR1_CC1S_0,
+                INDIRECT = TIM_CCMR1_CC1S_1,
+                TRC = TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC1S_1,
+            };
+
             static inline void configure();
         };
 
@@ -87,6 +112,26 @@ namespace STM32::Timer
         class OCompare : public Channel<tNumber>
         {
         public:
+            // Output polarity
+            enum Polarity
+            {
+                HIGH = 0,
+                LOW  = TIM_CCER_CC1P,
+            };
+
+            // Output mode
+            enum Mode
+            {
+                TIMING          = 0,
+                ACTIVE          = TIM_CCMR1_OC1M_0,
+                INACTIVE        = TIM_CCMR1_OC1M_1,
+                TOGGLE          = TIM_CCMR1_OC1M_0 | TIM_CCMR1_OC1M_1,
+                PWM1            = TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2,
+                PWM2            = TIM_CCMR1_OC1M,
+                FORCED_ACTIVE   = TIM_CCMR1_OC1M_0 | TIM_CCMR1_OC1M_2,
+                FORCED_INACTIVE = TIM_CCMR1_OC1M_2,
+            };
+
             static inline void configure();
         };
 
@@ -94,6 +139,13 @@ namespace STM32::Timer
         class PWMGeneration : public OCompare<tNumber>
         {
         public:
+            // PWM Fast mod
+            enum class FastMode
+            {
+                DISABLE = 0x00000000U,
+                ENABLE  = TIM_CCMR1_OC1FE,
+            };
+
             static inline void configure();
         };
 
@@ -102,5 +154,9 @@ namespace STM32::Timer
 
     template <uint32_t tRegsAddr, IRQn_Type tIRQn, typename tClock>
     class AdvancedTimer : public GPTimer<tRegsAddr, tIRQn, tClock>
-    {};
+    {
+    public:
+        static inline void setRepetitionCounter(uint8_t counter);
+        static inline uint8_t getRepetitionCounter();
+    };
 }
