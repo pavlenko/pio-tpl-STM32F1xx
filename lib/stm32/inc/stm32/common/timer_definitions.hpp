@@ -49,6 +49,7 @@ namespace STM32::Timer
         CompareCh4 = 0x7 << TIM_CR2_MMS_Pos,///< OC4REF signal is used as TRGO
     };
 
+    template<uint32_t tRegsAddr, IRQn_Type tIRQn>
     class BasicTimer
     {
         static inline void enable();
@@ -81,7 +82,11 @@ namespace STM32::Timer
         };
 
         template <uint8_t tNumber>
-        class OCompare : public Channel<tNumber>;
+        class OCompare : public Channel<tNumber>
+        {
+        public:
+            static inline void configure();
+        };
 
         template <uint8_t tNumber>
         class PWMGeneration : public OCompare<tNumber>;
