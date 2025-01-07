@@ -1,5 +1,9 @@
 #pragma once
 
+// todo resolve features for each type to split logic
+// basic:
+// general:
+// advanced:
 namespace STM32::Timer
 {
     // All timer`s interrupts
@@ -48,4 +52,16 @@ namespace STM32::Timer
         CompareCh3 = 0x6 << TIM_CR2_MMS_Pos,///< OC3REF signal is used as TRGO
         CompareCh4 = 0x7 << TIM_CR2_MMS_Pos,///< OC4REF signal is used as TRGO
     };
+
+    class BasicTimer
+    {
+        static inline void enable();
+        static inline void disable();
+    };
+
+    class GPTimer : public BasicTimer
+    {};
+
+    class AdvancedTimer : public BasicTimer
+    {};
 }
