@@ -52,20 +52,21 @@ namespace STM32::Timer
     template <uint32_t tRegsAddr, IRQn_Type tIRQn, typename tClock>
     class BasicTimer
     {
-        //config: prescaller, period, one-pulse(?)
+        //config: one-pulse(?)
         static inline void configure();
 static inline void setPrescaller(uint16_t);
 static inline void setAutoReload(uint16_t);
+static inline void setCounter(uint16_t);
         static inline void enable();
         static inline void disable();
-        static inline void start();
-        static inline void stop();
-        static inline void setValue(uint16_t);
-        static inline uint16_t getValue();
         static inline void attachIRQ(IRQFlags flags);
         static inline void detachIRQ(IRQFlags flags);
         static inline void attachDMARequest();
         static inline void detachDMARequest();
+static inline bool hasIRQ();
+static inline void clrIRQ();
+static inline void start();
+        static inline void stop();
     };
 
     template <uint32_t tRegsAddr, IRQn_Type tIRQn, typename tClock>
