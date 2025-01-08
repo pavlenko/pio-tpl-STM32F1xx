@@ -31,9 +31,9 @@ namespace STM32::Timer
     {
         UP = 0x00000000U,
         DOWN = TIM_CR1_DIR,
-        CenterAligned1 = TIM_CR1_CMS_0,///< center aligned, interrupt with counting down
-        CenterAligned2 = TIM_CR1_CMS_1,///< center aligned, interrupt with counting up
-        CenterAligned3 = TIM_CR1_CMS, ///< center aligned, interrupt with both
+        CENTER_ALIGNED1 = TIM_CR1_CMS_0,
+        CENTER_ALIGNED2 = TIM_CR1_CMS_1,
+        CENTER_ALIGNED3 = TIM_CR1_CMS,
     };
 
     // Timer master mode
