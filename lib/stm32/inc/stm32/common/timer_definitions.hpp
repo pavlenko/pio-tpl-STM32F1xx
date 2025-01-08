@@ -54,6 +54,8 @@ namespace STM32::Timer
     {
         //config: prescaller, period, one-pulse(?)
         static inline void configure();
+static inline void setPrescaller(uint16_t);
+static inline void setAutoReload(uint16_t);
         static inline void enable();
         static inline void disable();
         static inline void start();
