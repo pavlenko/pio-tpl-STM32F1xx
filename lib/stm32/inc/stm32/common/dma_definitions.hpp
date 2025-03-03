@@ -1,5 +1,10 @@
 #pragma once
 
+#include <stdint.h>
+#include <type_traits>
+
+#include <stm32/_cmsis.hpp>
+
 namespace STM32::DMA
 {
     /**

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace STM32::IO
 {
     enum class Mode
