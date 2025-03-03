@@ -1,5 +1,9 @@
 #pragma once
 
+#include <stdint.h>
+#include <stm32/_cmsis.hpp>
+#include <type_traits>
+
 namespace STM32::UART
 {
    /**
@@ -20,7 +24,7 @@ namespace STM32::UART
         STOP_1BIT = 0,
         STOP_2BIT = USART_CR2_STOP_1 << 16,
         // Parity control
-        PARITY_NONE = 0
+        PARITY_NONE = 0,
         PARITY_EVEN = USART_CR1_PCE,
         PARITY_ODD = USART_CR1_PCE | USART_CR1_PS,
         // HW control
