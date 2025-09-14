@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <stm32/dev/clock.hpp>
+#include <stm32/dev/flash.hpp>
 
 int main(void)
 {
@@ -20,7 +21,7 @@ int main(void)
     Clock::AHBClock::setPrescaler<Clock::AHBClock::Prescaler::DIV1>();
     Clock::APB1Clock::setPrescaler<Clock::APB1Clock::Prescaler::DIV2>();
     Clock::APB2Clock::setPrescaler<Clock::APB2Clock::Prescaler::DIV1>();
-    //TODO flash latency
+    Flash::configure(SystemCoreClock);
     //  Clock config end
 
     while (true)
