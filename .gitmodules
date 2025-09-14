@@ -1,0 +1,3 @@
+[submodule "lib/pio-lib-STM32"]
+	path = lib/pio-lib-STM32
+	url = git@github.com:pavlenko/pio-lib-STM32.git
