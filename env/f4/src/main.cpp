@@ -6,6 +6,7 @@
 
 #include <stm32/dev/clock.hpp>
 #include <stm32/dev/flash.hpp>
+#include <stm32/dev/io.hpp>
 
 int main(void)
 {
@@ -25,6 +26,8 @@ int main(void)
     Clock::APB2Clock::setPrescaler<Clock::APB2Clock::Prescaler::DIV2>();
     Flash::configure(SystemCoreClock);
     //  Clock config end
+
+    IO::PA::enable();
 
     while (true)
     {
