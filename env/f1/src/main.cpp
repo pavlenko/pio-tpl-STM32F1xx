@@ -25,7 +25,8 @@ int main(void)
     Flash::configure(SystemCoreClock);
     //  Clock config end
 
-    IO::PA::enable();
+    IO::PC::enable();
+    //IO::PC13::configure(/*mode, speed, pull, otype, af*/);
 
     while (true)
     {
