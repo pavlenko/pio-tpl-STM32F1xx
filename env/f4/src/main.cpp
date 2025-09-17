@@ -17,19 +17,22 @@ int main(void)
     // Clock config
     __HAL_RCC_PWR_CLK_ENABLE();
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+
     Clock::HSEClock::on();
     Clock::PLLClock::configure<
         Clock::PLLClock::Source::HSE,
         Clock::PLLClockConfig<8u, 336u, 2u, 7u, 2u> //<-- HSE 8MHz -> SYS 168 MHz
     >();
     Clock::PLLClock::on();
-    // ???
-    Clock::AHBClock::setPrescaler<Clock::AHBClock::Prescaler::DIV1>();
-    Clock::APB1Clock::setPrescaler<Clock::APB1Clock::Prescaler::DIV4>();
-    Clock::APB2Clock::setPrescaler<Clock::APB2Clock::Prescaler::DIV2>();
-    Clock::SysClock::selectSource<Clock::SysClock::Source::HSE>();
-    Flash::configure(SystemCoreClock);
-    //  Clock config end
+
+    Flash::configure(168000000);//TODO only increase wait states here
+
+    Clock::AHBClock::setDivider<Clock::AHBClock::Divider::DIV1>();
+    Clock::APB1Clock::setDivider<Clock::APB1Clock::Divider::DIV4>();
+    Clock::APB2Clock::setDivider<Clock::APB2Clock::Divider::DIV2>();
+    Clock::SysClock::selectSource<Clock::SysClock::Source::PLL>();
+    //TODO only decrease wait states here, need to move bus divider inside selectSource & rename to configure...
+    // Clock config end
 
     IO::PB::enable();
     IO::PB2::configure<IO::Config<IO::Mode::OUTPUT>>();

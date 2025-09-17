@@ -19,9 +19,9 @@ int main(void)
     >();
     Clock::PLLClock::on();
     Clock::SysClock::selectSource<Clock::SysClock::Source::PLL>();
-    Clock::AHBClock::setPrescaler<Clock::AHBClock::Prescaler::DIV1>();
-    Clock::APB1Clock::setPrescaler<Clock::APB1Clock::Prescaler::DIV2>();
-    Clock::APB2Clock::setPrescaler<Clock::APB2Clock::Prescaler::DIV1>();
+    Clock::AHBClock::setDivider<Clock::AHBClock::Divider::DIV1>();
+    Clock::APB1Clock::setDivider<Clock::APB1Clock::Divider::DIV2>();
+    Clock::APB2Clock::setDivider<Clock::APB2Clock::Divider::DIV1>();
     Flash::configure(SystemCoreClock);
     //  Clock config end
 
