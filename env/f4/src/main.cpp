@@ -25,13 +25,11 @@ int main(void)
     >();
     Clock::PLLClock::on();
 
-    Flash::configure(168000000);//TODO only increase wait states here
-
-    Clock::AHBClock::setDivider<Clock::AHBClock::Divider::DIV1>();
-    Clock::APB1Clock::setDivider<Clock::APB1Clock::Divider::DIV4>();
-    Clock::APB2Clock::setDivider<Clock::APB2Clock::Divider::DIV2>();
-    Clock::SysClock::selectSource<Clock::SysClock::Source::PLL>();
-    //TODO only decrease wait states here, need to move bus divider inside selectSource & rename to configure...
+    Clock::SysClock::configure<
+        Clock::SysClock::Source::PLL,
+        Flash::Latency::WS5,
+        Clock::SysClockConfig<Clock::AHBClock::Divider::DIV1, Clock::APB1Clock::Divider::DIV4, Clock::APB2Clock::Divider::DIV2>
+    >();
     // Clock config end
 
     IO::PB::enable();
