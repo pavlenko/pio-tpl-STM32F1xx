@@ -30,7 +30,7 @@ int main(void)
     //  Clock config end
 
     IO::PC::enable();
-    //IO::PC13::configure(/*mode, speed, pull, otype, af*/);
+    IO::PC13::configure<IO::Config<IO::Mode::OUTPUT>>();
 
     while (true)
     {
