@@ -1,0 +1,13 @@
+BasedOnStyle: Mozilla
+IndentWidth: 4
+AccessModifierOffset: -4
+ColumnLimit: 200
+BreakBeforeBraces: Linux
+BraceWrapping:
+  AfterEnum: true
+  AfterStruct: false
+  AfterClass: true
+  AfterNamespace: true
+
+NamespaceIndentation: All
+SpaceAfterTemplateKeyword: true
