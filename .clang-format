@@ -11,3 +11,4 @@ BraceWrapping:
 
 NamespaceIndentation: All
 SpaceAfterTemplateKeyword: true
+SortIncludes: false
