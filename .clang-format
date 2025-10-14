@@ -1,5 +1,7 @@
 BasedOnStyle: Mozilla
 IndentWidth: 4
+TabWidth: 4
+UseTab: Never
 AccessModifierOffset: -4
 ColumnLimit: 200
 BreakBeforeBraces: Linux
