@@ -47,69 +47,6 @@ namespace STM32::I2C
     }
 
     template <uint32_t tRegsAddr, IRQn_Type tEventIRQn, IRQn_Type tErrorIRQn, typename tClock, typename tDMATx, typename tDMARx>
-    inline bool Driver<tRegsAddr, tEventIRQn, tErrorIRQn, tClock, tDMATx, tDMARx>::_waitFlag(Flag flag)
-    {
-        bool result = false;
-        auto timer = _timeout;
-        do {
-            result = (getSR() & static_cast<uint32_t>(flag)) == static_cast<uint32_t>(flag);
-        } while (!result && --timer > 0);
-
-        return result;
-    }
-
-    template <uint32_t tRegsAddr, IRQn_Type tEventIRQn, IRQn_Type tErrorIRQn, typename tClock, typename tDMATx, typename tDMARx>
-    inline bool Driver<tRegsAddr, tEventIRQn, tErrorIRQn, tClock, tDMATx, tDMARx>::_start()
-    {
-        _regs()->SR1 = 0;
-        _regs()->SR2 = 0;
-        _regs()->CR1 |= I2C_CR1_START;
-
-        if (!_waitFlag(Flag::START_BIT))
-            return false;
-
-        return true;
-    }
-
-    template <uint32_t tRegsAddr, IRQn_Type tEventIRQn, IRQn_Type tErrorIRQn, typename tClock, typename tDMATx, typename tDMARx>
-    template <typename T>
-    inline bool Driver<tRegsAddr, tEventIRQn, tErrorIRQn, tClock, tDMATx, tDMARx>::_sendDevAddressW(T address)
-    {
-        static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>, "Allowed only 8 or 16 bit address");
-
-        if constexpr (std::is_same_v<T, uint16_t>) {
-            _regs()->DR = ((address & 0x0300u) >> 7) | 0x00F0u;
-            if (!_waitFlag(Flag::ADDR_10_SENT))
-                return false;
-
-            _regs()->DR = address;
-            return _waitFlag(Flag::ADDRESS_SENT);
-        } else {
-            _regs()->DR = address;
-            return _waitFlag(Flag::ADDRESS_SENT);
-        }
-
-        return true;
-    }
-
-    template <uint32_t tRegsAddr, IRQn_Type tEventIRQn, IRQn_Type tErrorIRQn, typename tClock, typename tDMATx, typename tDMARx>
-    template <typename T>
-    inline bool Driver<tRegsAddr, tEventIRQn, tErrorIRQn, tClock, tDMATx, tDMARx>::_sendDevAddressR(T address)
-    {
-        static_assert(std::is_same_v<T, uint8_t> || std::is_same_v<T, uint16_t>, "Allowed only 8 or 16 bit address");
-
-        if constexpr (std::is_same_v<T, uint16_t>) {
-            _regs()->DR = ((address & 0x0300u) >> 7) | 0x00F1u;
-            return _waitFlag(Flag::ADDRESS_SENT);
-        } else {
-            _regs()->DR = address | 1u;
-            return _waitFlag(Flag::ADDRESS_SENT);
-        }
-
-        return true;
-    }
-
-    template <uint32_t tRegsAddr, IRQn_Type tEventIRQn, IRQn_Type tErrorIRQn, typename tClock, typename tDMATx, typename tDMARx>
     template <typename T>
     inline bool Driver<tRegsAddr, tEventIRQn, tErrorIRQn, tClock, tDMATx, tDMARx>::_sendRegAddress(T address)
     {
