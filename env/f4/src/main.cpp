@@ -10,6 +10,7 @@
 #include <stm32/dev/i2c.hpp>
 #include <stm32/dev/uart.hpp>
 
+#include <stm32/drv/ssd1306.hpp>
 #include <stm32/lib/delay.hpp>
 
 int main(void)
@@ -38,6 +39,9 @@ int main(void)
     IO::PB2::configure<IO::Config<IO::Mode::OUTPUT>>();
 
     Delay::init();
+
+    I2C1::Master::select<I2C::Config<168000000u, I2C::Speed::FAST>>(SSD1306<I2C1>::address);
+    SSD1306<I2C1>::init();
 
     while (true)
     {
