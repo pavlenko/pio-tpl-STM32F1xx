@@ -40,7 +40,7 @@ int main(void)
 
     Delay::init();
 
-    I2C1::Master::select<I2C::Config<168000000u, I2C::Speed::FAST>>(SSD1306<I2C1>::address);
+    I2C1::Master::select(SSD1306<I2C1>::address, I2C::Speed::FAST);
     SSD1306<I2C1>::init();
 
     while (true)
