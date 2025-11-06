@@ -55,3 +55,13 @@ extern "C" void SysTick_Handler(void)
 {
     Delay::dispatchIRQ();
 }
+
+extern "C" void I2C1_EV_IRQHandler(void)
+{
+    STM32::I2C1::Slave::dispatchEventIRQ();
+}
+
+extern "C" void I2C1_ER_IRQHandler(void)
+{
+    STM32::I2C1::Slave::dispatchErrorIRQ();
+}
