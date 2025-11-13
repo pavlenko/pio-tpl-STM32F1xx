@@ -6,8 +6,11 @@
 #include <stm32/dev/flash.hpp>
 #include <stm32/dev/io.hpp>
 #include <stm32/dev/i2c.hpp>
+#include <stm32/dev/uart.hpp>
 
 #include <stm32/lib/delay.hpp>
+
+static uint8_t rxBuf[255];
 
 int main(void)
 {
@@ -31,6 +34,9 @@ int main(void)
     IO::PC::enable();
     IO::PC13::configure<IO::Config<IO::Mode::OUTPUT>>();
 
+    UART1::configure<9600u, UART::Config::ENABLE_RX_TX>();
+    UART1::rxDMA(rxBuf, 255, [](DMA::Event e){});
+
     Delay::init();
 
     while (true)
@@ -39,4 +45,10 @@ int main(void)
         Delay::ms(500);
     }
     return 0;
+}
+
+extern "C" void DMA1_Channel2_3_IRQHandler(void)
+{
+    STM32::UART1::DMATx::dispatchIRQ();
+    STM32::UART1::DMARx::dispatchIRQ();
 }
