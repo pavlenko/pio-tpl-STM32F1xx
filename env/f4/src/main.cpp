@@ -13,9 +13,11 @@
 #include <stm32/drv/ssd1306.hpp>
 #include <stm32/lib/delay.hpp>
 
+using namespace STM32;
+using LED = IO::PB2;
+
 int main(void)
 {
-    using namespace STM32;
 
     // Clock config
     __HAL_RCC_PWR_CLK_ENABLE();
@@ -35,8 +37,8 @@ int main(void)
     >();
     // Clock config end
 
-    IO::PB::enable();
-    IO::PB2::configure<IO::Config<IO::Mode::OUTPUT>>();
+    LED::port::enable();
+    LED::configure<IO::Config<IO::Mode::OUTPUT>>();
 
     Delay::init();
 
@@ -45,7 +47,7 @@ int main(void)
 
     while (true)
     {
-        IO::PB2::tog();
+        LED::tog();
         Delay::ms(500);
     }
     return 0;

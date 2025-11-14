@@ -3,7 +3,7 @@ IndentWidth: 4
 TabWidth: 4
 UseTab: Never
 AccessModifierOffset: -4
-ColumnLimit: 200
+ColumnLimit: 250
 BreakBeforeBraces: Linux
 BraceWrapping:
   AfterEnum: true
@@ -16,3 +16,4 @@ SpaceAfterTemplateKeyword: true
 SortIncludes: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
+BreakAfterReturnType: Automatic
