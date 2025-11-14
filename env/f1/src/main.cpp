@@ -8,6 +8,7 @@
 #include <stm32/dev/i2c.hpp>
 #include <stm32/dev/uart.hpp>
 
+#include <stm32/lib/buffer.hpp>
 #include <stm32/lib/delay.hpp>
 
 using namespace STM32;
@@ -18,6 +19,10 @@ using UART1Tx = IO::PA9;
 using UART1Rx = IO::PA10;
 
 static uint8_t rxBuf[255];
+static Buffer<1024> txBuf;
+
+static void UART1_RxCallback(DMA::Event e);
+static void UART1_TxCallback(DMA::Event e);
 
 int main(void)
 {
@@ -39,12 +44,29 @@ int main(void)
 
     Delay::init();
 
-    UART1::rxDMA(rxBuf, 255, [](DMA::Event e) {});
+    UART1::rxDMA(rxBuf, 255, UART1_RxCallback);
     while (true) {
         LED::tog();
         Delay::ms(500);
     }
     return 0;
+}
+
+static void UART1_RxCallback(DMA::Event e)
+{
+    // Reply
+    txBuf.seek(0);
+    txBuf.write("RX: ");
+    txBuf.write(rxBuf, 255 - UART1::DMARx::getRemaining());
+    txBuf.write("\n");
+
+    UART1::txDMA(txBuf.data(), txBuf.size(), UART1_TxCallback);
+}
+
+static void UART1_TxCallback(DMA::Event e)
+{
+    // Restart RX
+    UART1::rxDMA(rxBuf, 255, UART1_RxCallback);
 }
 
 extern "C" void SysTick_Handler(void)
