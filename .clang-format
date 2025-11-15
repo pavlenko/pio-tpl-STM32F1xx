@@ -12,8 +12,12 @@ BraceWrapping:
   AfterNamespace: true
 
 NamespaceIndentation: All
+SpaceAfterOperatorKeyword: true
 SpaceAfterTemplateKeyword: true
 SortIncludes: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
 BreakAfterReturnType: Automatic
+SpaceBeforeParens: Custom
+SpaceBeforeParensOptions:
+  AfterOverloadedOperator: true

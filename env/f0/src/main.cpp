@@ -5,7 +5,7 @@
 #include <stm32/dev/clock.hpp>
 #include <stm32/dev/flash.hpp>
 #include <stm32/dev/io.hpp>
-// #include <stm32/dev/i2c.hpp>
+#include <stm32/dev/i2c.hpp>
 #include <stm32/dev/uart.hpp>
 
 #include <stm32/lib/buffer.hpp>
