@@ -81,3 +81,8 @@ extern "C" void DMA1_Channel2_3_IRQHandler(void)
     UART1::DMATx::dispatchIRQ();
     UART1::DMARx::dispatchIRQ();
 }
+
+extern "C" void I2C1_IRQHandler(void)
+{
+    I2C1::Slave::dispatchErrorIRQ();
+}

@@ -17,6 +17,7 @@ SpaceAfterTemplateKeyword: true
 SortIncludes: false
 AllowShortBlocksOnASingleLine: Empty
 AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortFunctionsOnASingleLine: All
 BreakAfterReturnType: Automatic
 SpaceBeforeParens: Custom
 SpaceBeforeParensOptions:
