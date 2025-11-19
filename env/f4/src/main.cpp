@@ -40,6 +40,8 @@ int main(void)
     SysClock::configure<SysClock::Source::PLL, Flash::Latency::WS5, SysClockConfig<AHBClock::Divider::DIV1, APB1Clock::Divider::DIV4, APB2Clock::Divider::DIV2>>();
     // Clock config end
 
+    Delay::init();
+
     LED::port::enable();
     LED::configure<IO::Config<IO::Mode::OUTPUT>>();
 
@@ -50,13 +52,11 @@ int main(void)
     UART1Rx::setAltFunction<IO::AF::AF1>();
 
     UART1::configure<9600u, UART::Config::ENABLE_RX_TX>();
-
-    Delay::init();
-
-    //I2C1::Master::select(SSD1306<I2C1>::address, I2C::Speed::FAST);
-    //SSD1306<I2C1>::init();
-
     UART1::rxDMA(rxBuf, 255, UART1_RxCallback);
+
+    I2C1::Master::select(0x78 >> 1, I2C::Speed::STANDARD);
+    SSD1306<I2C1>::init();
+
     while (true) {
         LED::tog();
         Delay::ms(500);

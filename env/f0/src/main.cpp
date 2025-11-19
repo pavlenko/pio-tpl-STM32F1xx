@@ -8,6 +8,8 @@
 #include <stm32/dev/i2c.hpp>
 #include <stm32/dev/uart.hpp>
 
+#include <stm32/drv/ssd1306.hpp>
+
 #include <stm32/lib/buffer.hpp>
 #include <stm32/lib/delay.hpp>
 
@@ -33,6 +35,8 @@ int main(void)
     SysClock::configure<SysClock::Source::PLL, Flash::Latency::WS1, SysClockConfig<AHBClock::Divider::DIV1, APBClock::Divider::DIV1>>();
     //  Clock config end
 
+    Delay::init();
+
     LED::port::enable();
     LED::configure<IO::Config<IO::Mode::OUTPUT>>();
 
@@ -43,10 +47,11 @@ int main(void)
     UART1Rx::setAltFunction<IO::AF::AF1>();
 
     UART1::configure<9600u, UART::Config::ENABLE_RX_TX>();
-
-    Delay::init();
-
     UART1::rxDMA(rxBuf, 255, UART1_RxCallback);
+
+    I2C1::Master::select(0x78 >> 1, I2C::Speed::STANDARD);
+    SSD1306<I2C1>::init();
+
     while (true) {
         LED::tog();
         Delay::ms(500);

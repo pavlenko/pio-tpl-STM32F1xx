@@ -39,7 +39,11 @@
         "functional": "cpp",
         "atomic": "cpp",
         "type_traits": "cpp",
-        "concepts": "cpp"
+        "concepts": "cpp",
+        "string_view": "cpp",
+        "format": "cpp",
+        "initializer_list": "cpp",
+        "span": "cpp"
     },
     "workbench.colorCustomizations": {
         "editorUnnecessaryCode.opacity": "#000000C0"
