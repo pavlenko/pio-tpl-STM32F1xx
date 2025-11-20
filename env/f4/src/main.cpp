@@ -25,8 +25,8 @@ using UART1Rx = IO::PA10;
 static uint8_t rxBuf[255];
 static Buffer<1024> txBuf;
 
-static void UART1_RxCallback(DMA::Event e);
-static void UART1_TxCallback(DMA::Event e);
+static void UART1_RxCallback(DMA::Event e, uint16_t n);
+static void UART1_TxCallback(DMA::Event e, uint16_t n);
 
 int main(void)
 {
@@ -64,7 +64,7 @@ int main(void)
     return 0;
 }
 
-static void UART1_RxCallback(DMA::Event e)
+static void UART1_RxCallback(DMA::Event e, uint16_t n)
 {
     // Reply
     txBuf.seek(0);
@@ -75,7 +75,7 @@ static void UART1_RxCallback(DMA::Event e)
     UART1::txDMA(txBuf.data(), txBuf.size(), UART1_TxCallback);
 }
 
-static void UART1_TxCallback(DMA::Event e)
+static void UART1_TxCallback(DMA::Event e, uint16_t n)
 {
     // Restart RX
     UART1::rxDMA(rxBuf, 255, UART1_RxCallback);
