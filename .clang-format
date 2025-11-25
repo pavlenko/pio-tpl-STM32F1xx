@@ -5,6 +5,7 @@ UseTab: Never
 AccessModifierOffset: -4
 ColumnLimit: 250
 BreakBeforeBraces: Linux
+BreakTemplateDeclarations: Leave
 BraceWrapping:
   AfterEnum: true
   AfterStruct: false
